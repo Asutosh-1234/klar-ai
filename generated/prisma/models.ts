@@ -8,6 +8,7 @@
  *
  * 🟢 You can import this file directly.
  */
+export type * from './models/User'
 export type * from './models/CorsairIntegration'
 export type * from './models/CorsairAccount'
 export type * from './models/CorsairEntity'
