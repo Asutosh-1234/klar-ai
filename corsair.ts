@@ -3,7 +3,7 @@ import { createCorsair } from 'corsair';
 import { gmail } from '@corsair-dev/gmail';
 import { googlecalendar } from '@corsair-dev/googlecalendar';
 import { Pool } from 'pg';
-import ENV from './lib/config/ENV';
+import ENV from './app/lib/config/ENV';
 
 const pool = new Pool({
 	connectionString: ENV.DATABASE_URL,
