@@ -8,6 +8,7 @@ class ENV{
   static GOOGLE_REDIRECT_URI = this.required("GOOGLE_REDIRECT_URI")
   static RESEND_API_KEY = this.required("RESEND_API_KEY")
   static RESEND_EMAIL = this.required("SENDER_EMAIL")
+  static NEXTAUTH_URL = this.required('NEXTAUTH_URL')
 
   static required(name:string){
     const value = process.env[name]

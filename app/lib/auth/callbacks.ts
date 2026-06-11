@@ -10,18 +10,7 @@ export async function handleSignIn({ account, user }: any) {
     update: { name: user.name, avatar: user.image },
     create: { id: user.id, email: user.email, name: user.name, avatar: user.image }
   })
-
-  // Store tokens in Corsair
-  const tenant = corsair.withTenant(user.id)
-  if (account?.access_token) {
-    await tenant.gmail.keys.set_access_token(account.access_token)
-    await tenant.googlecalendar.keys.set_access_token(account.access_token)
-  }
-  if (account?.refresh_token) {
-    await tenant.gmail.keys.set_refresh_token(account.refresh_token)
-    await tenant.googlecalendar.keys.set_refresh_token(account.refresh_token)
-  }
-
+  
   return true
 }
 
