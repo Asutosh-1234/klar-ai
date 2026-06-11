@@ -40,8 +40,8 @@ export function Hero() {
         </div>
 
         {/* 3D Mockup Container */}
-        <div className="relative w-full max-w-5xl mx-auto h-[400px] md:h-[600px] [perspective:2000px] mb-8">
-          <div className="absolute inset-0 bg-surface-container rounded-2xl border border-white/10 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.8)] overflow-hidden transform [transform:rotateX(15deg)_rotateY(-10deg)_scale(0.95)] transition-transform duration-700 hover:[transform:rotateX(5deg)_rotateY(0deg)_scale(1)] flex flex-col">
+        <div className="relative w-full max-w-5xl mx-auto h-[400px] md:h-[600px] perspective-[2000px] mb-8">
+          <div className="absolute inset-0 bg-surface-container rounded-2xl border border-white/10 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.8)] overflow-hidden transform-[rotateX(15deg)_rotateY(-10deg)_scale(0.95)] transition-transform duration-700 hover:transform-[rotateX(5deg)_rotateY(0deg)_scale(1)] flex flex-col">
             {/* Mockup Header */}
             <div className="h-12 border-b border-white/5 flex items-center px-4 gap-2 bg-surface-container-highest">
               <div className="flex gap-1.5">
