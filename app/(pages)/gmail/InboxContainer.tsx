@@ -14,6 +14,7 @@ interface GmailMessage {
   labelIds?: string[];
   snippet?: string;
   internalDate?: string | number;
+  draftId?: string;
   payload?: {
     headers?: { name: string; value: string }[];
     body?: { data?: string };
@@ -29,34 +30,62 @@ export function InboxContainer() {
   const [selectedMessage, setSelectedMessage] = useState<GmailMessage | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  // Compose Draft States
+  const [isComposeOpen, setIsComposeOpen] = useState(false);
+  const [composeTo, setComposeTo] = useState("");
+  const [composeSubject, setComposeSubject] = useState("");
+  const [composeBody, setComposeBody] = useState("");
+  const [validationErrors, setValidationErrors] = useState<{ to?: string[]; body?: string[] }>({});
+  const [isSavingDraft, setIsSavingDraft] = useState(false);
+  
+  // Send Draft States
+  const [sendingDraftId, setSendingDraftId] = useState<string | null>(null);
+
   const fetchEmails = useCallback(async (query = "", label = selectedFolder) => {
     setLoading(true);
     setError(null);
     try {
-      // Build search query incorporating the label
-      let q = "";
-      if (label === "INBOX") q = "label:INBOX";
-      else if (label === "SENT") q = "label:SENT";
-      else if (label === "DRAFT") q = "label:DRAFT";
-      else if (label === "TRASH") q = "label:TRASH";
-      else if (label === "SPAM") q = "label:SPAM";
+      let res;
+      if (label === "DRAFT") {
+        res = await fetch(`/api/gmail/drafts`);
+      } else {
+        // Build search query incorporating the label
+        let q = "";
+        if (label === "INBOX") q = "label:INBOX";
+        else if (label === "SENT") q = "label:SENT";
+        else if (label === "TRASH") q = "label:TRASH";
+        else if (label === "SPAM") q = "label:SPAM";
 
-      if (query) {
-        q = q ? `${q} ${query}` : query;
+        if (query) {
+          q = q ? `${q} ${query}` : query;
+        }
+        res = await fetch(`/api/gmail?q=${encodeURIComponent(q)}`);
       }
 
-      const res = await fetch(`/api/gmail?q=${encodeURIComponent(q)}`);
       if (!res.ok) {
         throw new Error(`Failed to fetch emails: ${res.statusText}`);
       }
       const data = await res.json();
-      setMessages(data.messages || []);
-      
-      // Auto-select first email if available
-      if (data.messages && data.messages.length > 0) {
-        setSelectedMessage(data.messages[0]);
+
+      if (label === "DRAFT") {
+        const mappedDrafts = (data.drafts || []).map((d: { id: string; message?: GmailMessage }) => ({
+          ...d.message,
+          draftId: d.id,
+          id: d.message?.id || d.id
+        }));
+        setMessages(mappedDrafts);
+        if (mappedDrafts.length > 0) {
+          setSelectedMessage(mappedDrafts[0]);
+        } else {
+          setSelectedMessage(null);
+        }
       } else {
-        setSelectedMessage(null);
+        setMessages(data.messages || []);
+        if (data.messages && data.messages.length > 0) {
+          setSelectedMessage(data.messages[0]);
+        } else {
+          setSelectedMessage(null);
+        }
       }
     } catch (err: unknown) {
       console.error(err);
@@ -126,7 +155,6 @@ export function InboxContainer() {
 
   const getSenderInitials = (fromHeader: string) => {
     if (!fromHeader) return "G";
-    // Extract name if in format "Name <email@domain.com>"
     const nameMatch = fromHeader.match(/^"([^"]+)"|^\s*([^<]+)/);
     const name = nameMatch ? (nameMatch[1] || nameMatch[2]).trim() : fromHeader;
     const parts = name.split(" ");
@@ -154,14 +182,85 @@ export function InboxContainer() {
     return d.toLocaleDateString([], { month: 'short', day: 'numeric' });
   };
 
+  const handleSaveDraft = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setValidationErrors({});
+    setIsSavingDraft(true);
+
+    try {
+      const res = await fetch("/api/gmail/drafts", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          to: composeTo,
+          subject: composeSubject,
+          body: composeBody,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        if (data.details) {
+          setValidationErrors(data.details);
+        } else {
+          alert(data.error || "Failed to save draft");
+        }
+        return;
+      }
+
+      // Success
+      setIsComposeOpen(false);
+      setComposeTo("");
+      setComposeSubject("");
+      setComposeBody("");
+      setSelectedFolder("DRAFT");
+      fetchEmails("", "DRAFT");
+    } catch (err) {
+      console.error(err);
+      alert("Error saving draft");
+    } finally {
+      setIsSavingDraft(false);
+    }
+  };
+
+  const handleSendDraft = async (draftId: string) => {
+    if (sendingDraftId) return;
+    setSendingDraftId(draftId);
+
+    try {
+      const res = await fetch("/api/gmail/drafts/send", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ draftId }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to send draft");
+      }
+
+      alert("Draft sent successfully!");
+      setSelectedMessage(null);
+      fetchEmails();
+    } catch (err: unknown) {
+      console.error(err);
+      const errMsg = err instanceof Error ? err.message : "Error sending draft";
+      alert(errMsg);
+    } finally {
+      setSendingDraftId(null);
+    }
+  };
+
   const getIframeSrcDoc = (msg: GmailMessage) => {
     const rawBody = getMessageBody(msg.payload);
     if (!rawBody) return `<p style="font-family: sans-serif; color: #a0a0a0;">No message body preview available.</p>`;
 
-    // If it's HTML, return it, injecting dark mode support so it looks great inside the page
     const hasHtml = /<[a-z][\s\S]*>/i.test(rawBody);
     if (hasHtml) {
-      // We wrap the HTML content to style its scrollbar and ensure text wraps properly
       return `
         <!DOCTYPE html>
         <html>
@@ -176,7 +275,6 @@ export function InboxContainer() {
                 line-height: 1.6;
               }
               a { color: #c2c1ff !important; }
-              /* Force transparency and default light-colored text for generic emails */
               div, p, span, td, table {
                 color: inherit !important;
               }
@@ -189,7 +287,6 @@ export function InboxContainer() {
       `;
     }
 
-    // Otherwise wrap plain text
     return `
       <!DOCTYPE html>
       <html>
@@ -213,10 +310,21 @@ export function InboxContainer() {
   };
 
   return (
-    <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-6 min-h-[600px] h-[calc(100vh-12rem)] relative">
+    <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-6 h-full overflow-hidden relative">
       
       {/* Sidebar Folders */}
-      <div className="lg:col-span-2 flex flex-col gap-2">
+      <div className="lg:col-span-2 flex flex-col gap-2 overflow-y-auto custom-scrollbar">
+        <button
+          onClick={() => {
+            setValidationErrors({});
+            setIsComposeOpen(true);
+          }}
+          className="flex items-center justify-center gap-2 px-4 py-3.5 mb-2 rounded-xl bg-primary-container text-white font-bold text-sm hover:scale-95 transition-transform duration-200 glow-button text-center"
+        >
+          <span className="material-symbols-outlined text-lg">edit</span>
+          Compose
+        </button>
+
         <button
           onClick={() => setSelectedFolder("INBOX")}
           className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 text-left font-medium text-sm ${
@@ -328,9 +436,14 @@ export function InboxContainer() {
           ) : (
             messages.map((msg) => {
               const from = getHeader(msg, "from");
+              const to = getHeader(msg, "to");
               const subject = getHeader(msg, "subject") || "(No Subject)";
               const isSelected = selectedMessage?.id === msg.id;
               const dateVal = msg.internalDate ? parseInt(String(msg.internalDate)) : getHeader(msg, "date");
+
+              const isDraft = selectedFolder === "DRAFT" || !!msg.draftId;
+              const displayName = isDraft ? `To: ${to || "Draft"}` : getSenderName(from);
+              const avatarInitials = isDraft ? "DR" : getSenderInitials(from);
 
               return (
                 <div
@@ -342,14 +455,14 @@ export function InboxContainer() {
                 >
                   {/* Sender Initials Avatar */}
                   <div className="w-10 h-10 rounded-full bg-primary-container/20 border border-primary/20 shrink-0 flex items-center justify-center text-xs font-bold text-primary">
-                    {getSenderInitials(from)}
+                    {avatarInitials}
                   </div>
 
                   {/* Mail Info */}
                   <div className="flex-1 min-w-0">
                     <div className="flex justify-between items-baseline mb-1">
                       <h4 className="text-sm font-semibold text-white truncate max-w-[130px]">
-                        {getSenderName(from)}
+                        {displayName}
                       </h4>
                       <span className="text-[11px] text-on-surface-variant whitespace-nowrap">
                         {formatDate(dateVal)}
@@ -375,18 +488,30 @@ export function InboxContainer() {
           <div className="flex flex-col h-full overflow-hidden">
             {/* Message Headers Header */}
             <div className="p-6 border-b border-white/10 bg-white/2">
-              <h2 className="text-lg font-bold text-white mb-4 text-left">
-                {getHeader(selectedMessage, "subject") || "(No Subject)"}
-              </h2>
+              <div className="flex justify-between items-start">
+                <h2 className="text-lg font-bold text-white mb-4 text-left">
+                  {getHeader(selectedMessage, "subject") || "(No Subject)"}
+                </h2>
+                {selectedMessage.draftId && (
+                  <button
+                    onClick={() => handleSendDraft(selectedMessage.draftId!)}
+                    disabled={sendingDraftId === selectedMessage.draftId}
+                    className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-full transition-colors duration-200 flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                  >
+                    <span className="material-symbols-outlined text-sm">send</span>
+                    {sendingDraftId === selectedMessage.draftId ? "Sending..." : "Send Draft"}
+                  </button>
+                )}
+              </div>
               
               <div className="flex items-center gap-3 text-left">
                 <div className="w-12 h-12 rounded-full bg-primary-container/30 border border-primary/30 flex items-center justify-center text-sm font-bold text-primary">
-                  {getSenderInitials(getHeader(selectedMessage, "from"))}
+                  {selectedMessage.draftId ? "DR" : getSenderInitials(getHeader(selectedMessage, "from"))}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex justify-between items-center">
                     <p className="text-sm font-bold text-white truncate">
-                      {getHeader(selectedMessage, "from")}
+                      {selectedMessage.draftId ? "Draft Authored by You" : getHeader(selectedMessage, "from")}
                     </p>
                     <p className="text-[11px] text-on-surface-variant">
                       {formatDate(selectedMessage.internalDate ? parseInt(String(selectedMessage.internalDate)) : getHeader(selectedMessage, "date"))}
@@ -416,6 +541,92 @@ export function InboxContainer() {
           </div>
         )}
       </div>
+
+      {/* Compose Draft Modal */}
+      {isComposeOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="w-full max-w-lg glass-card border border-white/10 rounded-2xl bg-[#0F0F16] p-6 shadow-2xl flex flex-col">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-lg font-bold text-white">New Draft</h3>
+              <button
+                onClick={() => setIsComposeOpen(false)}
+                className="text-on-surface-variant hover:text-white transition-colors duration-150 cursor-pointer"
+              >
+                <span className="material-symbols-outlined">close</span>
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveDraft} className="flex flex-col gap-4 text-left">
+              <div>
+                <label className="block text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-2">
+                  To:
+                </label>
+                <input
+                  type="text"
+                  placeholder="recipient@domain.com"
+                  value={composeTo}
+                  onChange={(e) => setComposeTo(e.target.value)}
+                  className={`w-full bg-white/5 border rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-1 ${
+                    validationErrors.to ? "border-red-500 focus:border-red-500 focus:ring-red-500/20" : "border-white/10 focus:border-primary/40 focus:ring-primary/20"
+                  }`}
+                />
+                {validationErrors.to && (
+                  <p className="text-red-400 text-xs mt-1">{validationErrors.to[0]}</p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-2">
+                  Subject:
+                </label>
+                <input
+                  type="text"
+                  placeholder="Draft Subject"
+                  value={composeSubject}
+                  onChange={(e) => setComposeSubject(e.target.value)}
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-primary/40 focus:ring-1 focus:ring-primary/20"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-2">
+                  Message:
+                </label>
+                <textarea
+                  placeholder="Write your draft content here..."
+                  rows={8}
+                  value={composeBody}
+                  onChange={(e) => setComposeBody(e.target.value)}
+                  className={`w-full bg-white/5 border rounded-xl p-4 text-sm text-white focus:outline-none focus:ring-1 resize-none ${
+                    validationErrors.body ? "border-red-500 focus:border-red-500 focus:ring-red-500/20" : "border-white/10 focus:border-primary/40 focus:ring-primary/20"
+                  }`}
+                />
+                {validationErrors.body && (
+                  <p className="text-red-400 text-xs mt-1">{validationErrors.body[0]}</p>
+                )}
+              </div>
+
+              <div className="flex justify-end gap-3 mt-4">
+                <button
+                  type="button"
+                  onClick={() => setIsComposeOpen(false)}
+                  className="px-5 py-2.5 border border-white/10 text-white rounded-full text-xs font-semibold hover:bg-white/5 transition-colors duration-150 cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSavingDraft}
+                  className="px-6 py-2.5 bg-primary-container hover:scale-95 transition-transform duration-200 text-white rounded-full text-xs font-semibold flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer glow-button"
+                >
+                  <span className="material-symbols-outlined text-sm">save</span>
+                  {isSavingDraft ? "Saving..." : "Save Draft"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
     </div>
   );

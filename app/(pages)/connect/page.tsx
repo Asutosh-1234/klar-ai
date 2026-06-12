@@ -45,8 +45,16 @@ export default async function ConnectPage() {
       {/* Header */}
       <header className="relative z-10 border-b border-white/10 bg-background/80 backdrop-blur-xl">
         <div className="max-w-6xl mx-auto px-gutter h-20 flex items-center justify-between">
-          <div className="font-headline-md text-headline-md font-bold tracking-tighter text-gradient">
-            Klar AI
+          <div className="flex items-center gap-6">
+            <div className="font-headline-md text-headline-md font-bold tracking-tighter text-gradient">
+              Klar AI
+            </div>
+            {isGmailConnected && (
+              <a href="/gmail" className="hidden sm:flex items-center gap-1.5 text-sm text-on-surface-variant hover:text-white transition-colors duration-200">
+                <span className="material-symbols-outlined text-sm">mail</span>
+                Gmail Inbox
+              </a>
+            )}
           </div>
           <div className="flex items-center gap-4">
             {session.user.image && (
@@ -132,9 +140,12 @@ export default async function ConnectPage() {
             </div>
 
             {isGmailConnected ? (
-              <button disabled className="w-full py-4 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 font-semibold cursor-not-allowed text-center">
-                Gmail Account Connected
-              </button>
+              <a
+                href="/gmail"
+                className="w-full py-4 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-center flex items-center justify-center gap-2 transition-colors duration-200 glow-button"
+              >
+                Go to Gmail Inbox <span className="material-symbols-outlined text-sm">arrow_forward</span>
+              </a>
             ) : (
               <a
                 href="/api/connect?plugin=gmail"

@@ -14,3 +14,11 @@ export const getAllMails = async (params: GmailServiceTypes) => {
   })
   return mails.messages || []
 }
+
+
+export const getAllDraftMails = async(tenantId: string, userId?: string)=>{
+  const mails = await corsair.withTenant(tenantId).gmail.api.drafts.list({
+    userId: userId || "me"
+  })
+  return mails.drafts || []
+}

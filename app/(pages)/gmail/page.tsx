@@ -31,7 +31,7 @@ export default async function GmailPage() {
   }
 
   return (
-    <div className="relative min-h-screen bg-[#0A0A0F] text-on-background flex flex-col font-sans">
+    <div className="relative h-screen bg-[#0A0A0F] text-on-background flex flex-col font-sans overflow-hidden">
       <div className="absolute inset-0 bg-grid-pattern pointer-events-none opacity-40"></div>
 
       {/* Header */}
@@ -71,7 +71,7 @@ export default async function GmailPage() {
       </header>
 
       {/* Main Content Area */}
-      <main className="relative z-10 flex-1 flex flex-col max-w-7xl w-full mx-auto px-6 py-8">
+      <main className="relative z-10 flex-1 flex flex-col max-w-7xl w-full mx-auto px-6 py-6 overflow-hidden h-[calc(100vh-5rem)]">
         {!isGmailConnected ? (
           <div className="flex-1 flex items-center justify-center py-20">
             <div className="glass-card rounded-2xl p-10 max-w-lg text-center border border-white/10 flex flex-col items-center">
