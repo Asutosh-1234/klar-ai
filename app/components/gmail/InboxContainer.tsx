@@ -7,7 +7,17 @@ import { ComposeModal } from "./ComposeModal";
 import { MailList } from "./MailList";
 import { MailDetails } from "./MailDetails";
 
-export function InboxContainer() {
+interface UserProfile {
+  name: string | null;
+  email: string | null;
+  image: string | null;
+}
+
+interface InboxContainerProps {
+  user: UserProfile;
+}
+
+export function InboxContainer({ user }: InboxContainerProps) {
   const {
     messages,
     loading,
@@ -16,8 +26,13 @@ export function InboxContainer() {
     setSearchQuery,
     selectedFolder,
     setSelectedFolder,
+    selectedCategory,
+    setSelectedCategory,
     selectedMessage,
     setSelectedMessage,
+    archiveMessage,
+    deleteMessage,
+    toggleReadStatus,
     fetchEmails,
   } = useGmailInbox();
 
@@ -47,39 +62,117 @@ export function InboxContainer() {
     },
   });
 
+  const isSplitView = !!selectedMessage;
+
+  const onSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    fetchEmails(searchQuery);
+  };
+
   return (
-    <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-6 h-full overflow-hidden relative">
+    <div className="flex h-screen w-full overflow-hidden bg-background text-on-background">
       
       {/* Sidebar Navigation */}
       <InboxSidebar
+        user={user}
         selectedFolder={selectedFolder}
         setSelectedFolder={setSelectedFolder}
         onComposeClick={openCompose}
         onSyncClick={() => fetchEmails(searchQuery)}
       />
 
-      {/* Email List Pane */}
-      <MailList
-        messages={messages}
-        loading={loading}
-        error={error}
-        selectedMessage={selectedMessage}
-        onSelectMessage={setSelectedMessage}
-        searchQuery={searchQuery}
-        setSearchQuery={setSearchQuery}
-        onSearchSubmit={(e: React.FormEvent) => {
-          e.preventDefault();
-          fetchEmails(searchQuery);
-        }}
-        selectedFolder={selectedFolder}
-      />
+      {/* Main Workspace */}
+      <main className="flex-1 flex flex-col h-full overflow-hidden min-w-0 bg-background relative">
+        {/* TopNavBar */}
+        <header className="flex justify-between items-center w-full px-6 h-16 bg-background border-b border-white/5 z-40 shrink-0">
+          <form onSubmit={onSearchSubmit} className="flex items-center flex-1 max-w-2xl">
+            <div className="relative w-full">
+              <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-lg">
+                search
+              </span>
+              <input
+                type="text"
+                placeholder="Search mail and attachments..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full bg-surface-sidebar border-none rounded-full py-2 pl-10 pr-4 text-xs focus:ring-1 focus:ring-primary/40 placeholder:text-outline transition-all text-white font-body-md"
+              />
+            </div>
+          </form>
 
-      {/* Email Details Pane */}
-      <MailDetails
-        message={selectedMessage}
-        sendingDraftId={sendingDraftId}
-        onSendDraft={handleSendDraft}
-      />
+          <div className="flex items-center gap-4 text-on-surface-variant ml-4 shrink-0">
+            <div className="flex gap-6 mr-6">
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchQuery("");
+                  fetchEmails("");
+                }}
+                className={`font-label-caps text-xs tracking-wider transition-colors cursor-pointer ${
+                  !searchQuery ? "text-primary border-b-2 border-primary pb-1" : "hover:text-primary opacity-80 hover:opacity-100"
+                }`}
+              >
+                All Mail
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchQuery("is:unread");
+                  fetchEmails("is:unread");
+                }}
+                className={`font-label-caps text-xs tracking-wider transition-colors cursor-pointer ${
+                  searchQuery === "is:unread" ? "text-primary border-b-2 border-primary pb-1" : "hover:text-primary opacity-80 hover:opacity-100"
+                }`}
+              >
+                Unread
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchQuery("is:starred");
+                  fetchEmails("is:starred");
+                }}
+                className={`font-label-caps text-xs tracking-wider transition-colors cursor-pointer ${
+                  searchQuery === "is:starred" ? "text-primary border-b-2 border-primary pb-1" : "hover:text-primary opacity-80 hover:opacity-100"
+                }`}
+              >
+                Flagged
+              </button>
+            </div>
+            <button className="hover:text-primary transition-colors material-symbols-outlined cursor-pointer">settings</button>
+            <button className="hover:text-primary transition-colors material-symbols-outlined cursor-pointer">help</button>
+          </div>
+        </header>
+
+        {/* Split View or List View Content */}
+        <div className="flex flex-1 overflow-hidden min-w-0">
+          {/* Email List Pane */}
+          <MailList
+            messages={messages}
+            loading={loading}
+            error={error}
+            selectedMessage={selectedMessage}
+            onSelectMessage={setSelectedMessage}
+            selectedFolder={selectedFolder}
+            selectedCategory={selectedCategory}
+            setSelectedCategory={setSelectedCategory}
+            archiveMessage={archiveMessage}
+            deleteMessage={deleteMessage}
+            toggleReadStatus={toggleReadStatus}
+            isSplitView={isSplitView}
+          />
+
+          {/* Email Details Pane */}
+          {selectedMessage && (
+            <MailDetails
+              message={selectedMessage}
+              sendingDraftId={sendingDraftId}
+              onSendDraft={handleSendDraft}
+              onClose={() => setSelectedMessage(null)}
+            />
+          )}
+        </div>
+      </main>
 
       {/* Compose Draft Modal */}
       <ComposeModal

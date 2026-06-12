@@ -1,41 +1,20 @@
 'use client'
 
-import { GmailMessage, getHeader, getSenderName, getSenderInitials, formatDate } from "@/app/lib/utils/gmail";
+import { GmailMessage, getHeader, getSenderName, formatDate } from "@/app/lib/utils/gmail";
 
 interface MailListProps {
   messages: GmailMessage[];
   loading: boolean;
   error: string | null;
   selectedMessage: GmailMessage | null;
-  onSelectMessage: (msg: GmailMessage) => void;
-  searchQuery: string;
-  setSearchQuery: (query: string) => void;
-  onSearchSubmit: (e: React.FormEvent) => void;
+  onSelectMessage: (msg: GmailMessage | null) => void;
   selectedFolder: string;
-}
-
-function getGradientAvatarStyle(name: string) {
-  const gradientPalettes = [
-    ["#8B5CF6", "#C7D2FE"], // Violet to Light Indigo
-    ["#6366F1", "#A5B4FC"], // Indigo to Lavender
-    ["#3B82F6", "#93C5FD"], // Blue to Light Blue
-    ["#EC4899", "#FBCFE8"], // Pink to Rose
-    ["#F59E0B", "#FCD34D"], // Amber to Light Gold
-    ["#10B981", "#6EE7B7"], // Emerald to Teal
-    ["#14B8A6", "#99F6E4"], // Teal to Mint
-  ];
-
-  let hash = 0;
-  for (let i = 0; i < name.length; i++) {
-    hash = name.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  const index = Math.abs(hash) % gradientPalettes.length;
-  const [c1, c2] = gradientPalettes[index];
-
-  return {
-    background: `linear-gradient(135deg, ${c1} 0%, ${c2} 100%)`,
-    color: "#050508", // Dark text for high contrast against gradient
-  };
+  selectedCategory: string;
+  setSelectedCategory: (cat: string) => void;
+  archiveMessage: (id: string) => void;
+  deleteMessage: (id: string) => void;
+  toggleReadStatus: (id: string, currentlyUnread: boolean) => void;
+  isSplitView: boolean;
 }
 
 export function MailList({
@@ -44,50 +23,82 @@ export function MailList({
   error,
   selectedMessage,
   onSelectMessage,
-  searchQuery,
-  setSearchQuery,
-  onSearchSubmit,
   selectedFolder,
+  selectedCategory,
+  setSelectedCategory,
+  archiveMessage,
+  deleteMessage,
+  toggleReadStatus,
+  isSplitView,
 }: MailListProps) {
+  const categories = [
+    { id: "primary", label: "Primary", icon: "inbox" },
+    { id: "promotions", label: "Promotions", icon: "sell" },
+    { id: "social", label: "Social", icon: "group" },
+    { id: "updates", label: "Updates", icon: "info" },
+  ];
+
   return (
-    <div className="lg:col-span-4 flex flex-col bg-surface-panel border border-white/[0.04] rounded-xl overflow-hidden h-full shadow-[0_4px_24px_rgba(0,0,0,0.5)]">
-      {/* Search Header */}
-      <form onSubmit={onSearchSubmit} className="p-4 border-b border-white/[0.04] flex items-center gap-2">
-        <div className="relative flex-1">
-          <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-lg pointer-events-none">
-            search
+    <div className={`flex flex-col bg-surface-sidebar h-full transition-all duration-300 ${
+      isSplitView ? "w-[400px] border-r border-white/5 shrink-0" : "flex-1"
+    }`}>
+      {/* Category Tabs / Header */}
+      {isSplitView ? (
+        // Split view left pane header
+        <div className="p-4 flex items-center justify-between border-b border-white/5 shrink-0 bg-surface-sidebar h-12">
+          <span className="text-xs font-bold text-on-surface-variant tracking-wider uppercase">
+            {selectedFolder === "INBOX" ? "Inbox" : selectedFolder.toLowerCase()}
           </span>
-          <input
-            type="text"
-            placeholder="Search mail..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-white/[0.03] border border-white/[0.06] rounded-md pl-9 pr-4 py-2 text-xs text-white placeholder-on-surface-variant/60 focus:outline-none focus:border-primary/40 focus:ring-1 focus:ring-primary/20 transition-all duration-150"
-          />
+          <span className="material-symbols-outlined text-sm text-on-surface-variant cursor-pointer">filter_list</span>
         </div>
-        <button
-          type="submit"
-          className="px-4 py-2 bg-white/[0.04] hover:bg-white/[0.08] text-white text-[11px] font-semibold rounded-md border border-white/[0.06] hover:border-white/[0.12] transition-all duration-200 cursor-pointer"
-        >
-          Go
-        </button>
-      </form>
+      ) : (
+        // Full width category tab bar
+        selectedFolder === "INBOX" && (
+          <section className="px-6 border-b border-white/5 bg-background flex items-center h-12 gap-10 shrink-0">
+            {categories.map((cat) => {
+              const isActive = selectedCategory === cat.id;
+              return (
+                <button
+                  key={cat.id}
+                  type="button"
+                  onClick={() => setSelectedCategory(cat.id)}
+                  className={`h-full border-b-2 flex items-center gap-2 px-1 transition-all group cursor-pointer ${
+                    isActive
+                      ? "border-primary text-primary font-medium"
+                      : "border-transparent text-on-surface-variant hover:text-on-surface"
+                  }`}
+                >
+                  <span className="material-symbols-outlined text-[18px]">
+                    {cat.icon}
+                  </span>
+                  <span className="text-sm font-medium">{cat.label}</span>
+                </button>
+              );
+            })}
+          </section>
+        )
+      )}
+
+      {/* Action Header (Only in Inbox View) */}
+      {!isSplitView && (
+        <div className="px-6 py-2 flex items-center gap-4 text-on-surface-variant border-b border-white/5 bg-surface-sidebar z-10 shrink-0 h-10">
+          <input type="checkbox" className="w-4 h-4 rounded border-white/20 bg-transparent text-primary focus:ring-primary/20 cursor-pointer" />
+          <button className="material-symbols-outlined text-[20px] hover:text-white cursor-pointer">refresh</button>
+          <button className="material-symbols-outlined text-[20px] hover:text-white cursor-pointer">more_vert</button>
+        </div>
+      )}
 
       {/* Email Items Scroll Area */}
-      <div className="flex-1 overflow-y-auto divide-y divide-white/[0.03] custom-scrollbar">
+      <div className="flex-1 overflow-y-auto custom-scrollbar bg-surface-sidebar">
         {loading ? (
           // Skeleton states
-          Array.from({ length: 5 }).map((_, idx) => (
-            <div key={idx} className="py-5 px-4 flex gap-3 animate-pulse">
-              <div className="w-9 h-9 rounded-full bg-white/[0.04] shrink-0" />
-              <div className="flex-1 min-w-0 flex flex-col gap-2">
-                <div className="flex justify-between items-center">
-                  <div className="h-3 bg-white/[0.04] rounded w-24" />
-                  <div className="h-2 bg-white/[0.04] rounded w-10" />
-                </div>
-                <div className="h-3 bg-white/[0.04] rounded w-3/4" />
-                <div className="h-2.5 bg-white/[0.04] rounded w-full" />
-              </div>
+          Array.from({ length: 10 }).map((_, idx) => (
+            <div key={idx} className="py-3 px-6 flex gap-3 animate-pulse items-center border-b border-white/5">
+              <div className="w-4 h-4 bg-white/5 rounded shrink-0" />
+              <div className="w-4 h-4 bg-white/5 rounded shrink-0" />
+              <div className="h-3 bg-white/5 rounded w-28 shrink-0" />
+              <div className="h-3 bg-white/5 rounded flex-1" />
+              <div className="h-3 bg-white/5 rounded w-10 shrink-0" />
             </div>
           ))
         ) : error ? (
@@ -97,61 +108,147 @@ export function MailList({
         ) : messages.length === 0 ? (
           <div className="p-10 text-center text-on-surface-variant flex flex-col items-center justify-center h-full gap-3 opacity-60">
             <span className="material-symbols-outlined text-3xl">mail</span>
-            <p className="text-xs font-medium">No emails found in this folder</p>
+            <p className="text-xs font-medium">No emails found in this category</p>
           </div>
         ) : (
-          messages.map((msg) => {
-            const from = getHeader(msg, "from");
-            const to = getHeader(msg, "to");
-            const subject = getHeader(msg, "subject") || "(No Subject)";
-            const isSelected = selectedMessage?.id === msg.id;
-            const dateVal = msg.internalDate ? parseInt(String(msg.internalDate)) : getHeader(msg, "date");
+          <div className="flex flex-col">
+            {messages.map((msg) => {
+              const from = getHeader(msg, "from");
+              const to = getHeader(msg, "to");
+              const subject = getHeader(msg, "subject") || "(No Subject)";
+              const isSelected = selectedMessage?.id === msg.id;
+              const dateVal = msg.internalDate ? parseInt(String(msg.internalDate)) : getHeader(msg, "date");
 
-            const isDraft = selectedFolder === "DRAFT" || !!msg.draftId;
-            const displayName = isDraft ? `To: ${to || "Draft"}` : getSenderName(from);
-            const avatarInitials = isDraft ? "DR" : getSenderInitials(from);
-            const avatarName = isDraft ? "Draft" : displayName;
+              const isDraft = selectedFolder === "DRAFT" || !!msg.draftId;
+              const displayName = isDraft ? `To: ${to || "Draft"}` : getSenderName(from);
+              const isUnread = msg.labelIds?.includes("UNREAD");
+              const isStarred = msg.labelIds?.includes("STARRED");
 
-            return (
-              <div
-                key={msg.id}
-                onClick={() => onSelectMessage(msg)}
-                className={`py-5 px-4 flex gap-3 cursor-pointer hover:bg-white/[0.02] border-l-2 transition-all duration-150 text-left ${
-                  isSelected 
-                    ? "bg-white/[0.04] border-l-primary" 
-                    : "border-l-transparent hover:border-l-primary/30"
-                }`}
-              >
-                {/* Sender Avatar */}
-                <div 
-                  style={getGradientAvatarStyle(avatarName)}
-                  className="w-9 h-9 rounded-full shrink-0 flex items-center justify-center text-[10px] font-bold shadow-sm"
+              if (isSplitView) {
+                // Compact multi-line cards for Split Pane View (from details_design.html)
+                return (
+                  <div
+                    key={msg.id}
+                    onClick={() => onSelectMessage(msg)}
+                    className={`p-5 hover:bg-white/3 transition-all duration-200 hover:translate-x-1 cursor-pointer border-b border-white/5 relative ${
+                      isSelected ? "bg-white/5 border-l-4 border-primary" : "border-l-4 border-transparent"
+                    }`}
+                  >
+                    <div className="flex justify-between items-start mb-1">
+                      <h3 className={`font-bold font-body-md truncate max-w-[220px] ${isUnread ? "text-white" : "text-on-surface-variant"}`}>
+                        {displayName}
+                      </h3>
+                      <span className="text-[10px] text-on-surface-variant opacity-60 shrink-0">
+                        {formatDate(dateVal)}
+                      </span>
+                    </div>
+                    <p className={`text-sm font-semibold truncate mb-1 ${isUnread ? "text-primary font-bold" : "text-on-surface font-semibold"}`}>
+                      {subject}
+                    </p>
+                    <p className="text-xs text-on-surface-variant line-clamp-2 leading-relaxed">
+                      {msg.snippet}
+                    </p>
+                  </div>
+                );
+              }
+
+              // Information-dense single-line layout (from inbox_design.html)
+              return (
+                <div
+                  key={msg.id}
+                  onClick={() => onSelectMessage(msg)}
+                  className={`email-row group flex items-center h-[42px] px-6 border-l-2 cursor-pointer border-b border-white/3 transition-all duration-150 ${
+                    isSelected
+                      ? "border-primary bg-primary/5"
+                      : "border-transparent hover:bg-white/2"
+                  }`}
                 >
-                  {avatarInitials}
-                </div>
-
-                {/* Mail Info */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex justify-between items-baseline mb-1">
-                    <h4 className="text-xs font-semibold text-white truncate max-w-[130px]">
-                      {displayName}
-                    </h4>
-                    <span className="text-[10px] text-on-surface-variant whitespace-nowrap font-medium">
-                      {formatDate(dateVal)}
+                  {/* Checkbox + Star */}
+                  <div className="flex items-center gap-4 w-16 shrink-0">
+                    <input
+                      type="checkbox"
+                      onClick={(e) => e.stopPropagation()}
+                      className="w-4 h-4 rounded border-white/20 bg-transparent text-primary focus:ring-primary/20 cursor-pointer"
+                    />
+                    <span
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        // Gmail label sync/update logic would happen in a real action
+                      }}
+                      className={`material-symbols-outlined text-[18px] transition-colors cursor-pointer ${
+                        isStarred ? "text-amber-400 font-fill text-fill-1" : "text-on-surface-variant hover:text-white"
+                      }`}
+                      style={{ fontVariationSettings: isStarred ? "'FILL' 1" : "'FILL' 0" }}
+                    >
+                      star
                     </span>
                   </div>
-                  <p className={`text-xs truncate mb-1 ${
-                    isSelected ? "text-white font-medium" : "text-on-surface/90"
-                  }`}>
-                    {subject}
-                  </p>
-                  <p className="text-[11px] text-on-surface-variant line-clamp-2 leading-relaxed">
-                    {msg.snippet}
-                  </p>
+
+                  {/* Sender Name */}
+                  <div className={`w-48 shrink-0 text-sm truncate pr-4 ${isUnread ? "font-bold text-white" : "text-on-surface-variant font-normal"}`}>
+                    {displayName}
+                  </div>
+
+                  {/* Subject + Snippet on a single line with " - " separator */}
+                  <div className="flex-1 flex items-center min-w-0 pr-4 text-sm truncate">
+                    <span className={`truncate shrink-0 ${isUnread ? "font-bold text-white" : "text-on-surface font-normal"}`}>
+                      {subject}
+                    </span>
+                    <span className="mx-2 text-on-surface-variant/40 shrink-0 select-none">—</span>
+                    <span className="text-on-surface-variant truncate font-normal">
+                      {msg.snippet}
+                    </span>
+                  </div>
+
+                  {/* Date / Hover Actions */}
+                  <div className="w-24 shrink-0 flex justify-end text-right relative h-5 items-center">
+                    {/* Date */}
+                    <span className={`text-xs font-medium group-hover:hidden whitespace-nowrap ${isUnread ? "font-bold text-white" : "text-on-surface-variant"}`}>
+                      {formatDate(dateVal)}
+                    </span>
+                    {/* Action Icons (fade in on hover) */}
+                    <div className="hidden group-hover:flex items-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          archiveMessage(msg.id!);
+                        }}
+                        title="Archive"
+                        className="text-on-surface-variant hover:text-white p-0.5 rounded hover:bg-white/10 transition-colors"
+                      >
+                        <span className="material-symbols-outlined text-sm">archive</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          deleteMessage(msg.id!);
+                        }}
+                        title="Delete"
+                        className="text-on-surface-variant hover:text-white p-0.5 rounded hover:bg-white/10 transition-colors"
+                      >
+                        <span className="material-symbols-outlined text-sm">delete</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleReadStatus(msg.id!, !!isUnread);
+                        }}
+                        title={isUnread ? "Mark as Read" : "Mark as Unread"}
+                        className="text-on-surface-variant hover:text-white p-0.5 rounded hover:bg-white/10 transition-colors"
+                      >
+                        <span className="material-symbols-outlined text-sm">
+                          {isUnread ? "drafts" : "mail"}
+                        </span>
+                      </button>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            );
-          })
+              );
+            })}
+          </div>
         )}
       </div>
     </div>

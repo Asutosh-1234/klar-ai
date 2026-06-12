@@ -6,10 +6,11 @@ export function useGmailInbox() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedFolder, setSelectedFolder] = useState("INBOX");
+  const [selectedCategory, setSelectedCategory] = useState("primary");
   const [selectedMessage, setSelectedMessage] = useState<GmailMessage | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchEmails = useCallback(async (query = "", label = selectedFolder) => {
+  const fetchEmails = useCallback(async (query = "", label = selectedFolder, category = selectedCategory) => {
     setLoading(true);
     setError(null);
     try {
@@ -18,10 +19,15 @@ export function useGmailInbox() {
         res = await fetch(`/api/gmail/drafts`);
       } else {
         let q = "";
-        if (label === "INBOX") q = "label:INBOX";
-        else if (label === "SENT") q = "label:SENT";
-        else if (label === "TRASH") q = "label:TRASH";
-        else if (label === "SPAM") q = "label:SPAM";
+        if (label === "INBOX") {
+          q = `label:INBOX category:${category}`;
+        } else if (label === "SENT") {
+          q = "label:SENT";
+        } else if (label === "TRASH") {
+          q = "label:TRASH";
+        } else if (label === "SPAM") {
+          q = "label:SPAM";
+        }
 
         if (query) {
           q = q ? `${q} ${query}` : query;
@@ -61,7 +67,66 @@ export function useGmailInbox() {
     } finally {
       setLoading(false);
     }
-  }, [selectedFolder]);
+  }, [selectedFolder, selectedCategory]);
+
+  const archiveMessage = useCallback(async (messageId: string) => {
+    setMessages(prev => prev.filter(m => m.id !== messageId));
+    setSelectedMessage(prev => prev?.id === messageId ? null : prev);
+    try {
+      const res = await fetch("/api/gmail/action", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messageId, action: "archive" })
+      });
+      if (!res.ok) throw new Error("Failed to archive");
+    } catch (err) {
+      console.error(err);
+      fetchEmails();
+    }
+  }, [fetchEmails]);
+
+  const deleteMessage = useCallback(async (messageId: string) => {
+    setMessages(prev => prev.filter(m => m.id !== messageId));
+    setSelectedMessage(prev => prev?.id === messageId ? null : prev);
+    try {
+      const res = await fetch("/api/gmail/action", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messageId, action: "delete" })
+      });
+      if (!res.ok) throw new Error("Failed to delete");
+    } catch (err) {
+      console.error(err);
+      fetchEmails();
+    }
+  }, [fetchEmails]);
+
+  const toggleReadStatus = useCallback(async (messageId: string, currentlyUnread: boolean) => {
+    setMessages(prev => prev.map(m => {
+      if (m.id === messageId) {
+        const labelIds = m.labelIds || [];
+        return {
+          ...m,
+          labelIds: currentlyUnread 
+            ? labelIds.filter(l => l !== "UNREAD")
+            : [...labelIds, "UNREAD"]
+        };
+      }
+      return m;
+    }));
+    try {
+      const action = currentlyUnread ? "markRead" : "markUnread";
+      const res = await fetch("/api/gmail/action", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messageId, action })
+      });
+      if (!res.ok) throw new Error("Failed to toggle read state");
+    } catch (err) {
+      console.error(err);
+      fetchEmails();
+    }
+  }, [fetchEmails]);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -76,8 +141,13 @@ export function useGmailInbox() {
     setSearchQuery,
     selectedFolder,
     setSelectedFolder,
+    selectedCategory,
+    setSelectedCategory,
     selectedMessage,
     setSelectedMessage,
+    archiveMessage,
+    deleteMessage,
+    toggleReadStatus,
     fetchEmails,
   };
 }

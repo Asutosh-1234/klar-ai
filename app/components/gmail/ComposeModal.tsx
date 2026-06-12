@@ -30,8 +30,8 @@ export function ComposeModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-[4px] transition-all duration-300">
-      <div className="w-full max-w-lg glass-card border border-white/[0.06] rounded-xl bg-surface-card p-6 shadow-[0_12px_40px_rgba(0,0,0,0.6)] flex flex-col glow-accent">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs transition-all duration-300">
+      <div className="w-full max-w-lg glass-card border border-white/6 rounded-xl bg-surface-card p-6 shadow-[0_12px_40px_rgba(0,0,0,0.6)] flex flex-col glow-accent">
         <div className="flex justify-between items-center mb-6 relative z-10">
           <h3 className="text-sm font-semibold text-white tracking-tight">New Draft</h3>
           <button
@@ -53,10 +53,10 @@ export function ComposeModal({
               placeholder="recipient@domain.com"
               value={composeTo}
               onChange={(e) => setComposeTo(e.target.value)}
-              className={`w-full bg-white/[0.02] border rounded-lg px-3.5 py-2 text-xs text-white placeholder-on-surface-variant/40 focus:outline-none focus:ring-1 ${
+              className={`w-full bg-white/2 border rounded-lg px-3.5 py-2 text-xs text-white placeholder-on-surface-variant/40 focus:outline-none focus:ring-1 ${
                 validationErrors.to
                   ? "border-red-500/50 focus:border-red-500 focus:ring-red-500/10"
-                  : "border-white/[0.06] focus:border-primary/40 focus:ring-primary/20"
+                  : "border-white/6 focus:border-primary/40 focus:ring-primary/20"
               }`}
             />
             {validationErrors.to && (
@@ -73,7 +73,7 @@ export function ComposeModal({
               placeholder="Draft Subject"
               value={composeSubject}
               onChange={(e) => setComposeSubject(e.target.value)}
-              className="w-full bg-white/[0.02] border border-white/[0.06] rounded-lg px-3.5 py-2 text-xs text-white placeholder-on-surface-variant/40 focus:outline-none focus:border-primary/40 focus:ring-1 focus:ring-primary/20"
+              className="w-full bg-white/2 border border-white/6 rounded-lg px-3.5 py-2 text-xs text-white placeholder-on-surface-variant/40 focus:outline-none focus:border-primary/40 focus:ring-1 focus:ring-primary/20"
             />
           </div>
 
@@ -86,10 +86,10 @@ export function ComposeModal({
               rows={8}
               value={composeBody}
               onChange={(e) => setComposeBody(e.target.value)}
-              className={`w-full bg-white/[0.02] border rounded-lg p-3.5 text-xs text-white placeholder-on-surface-variant/40 focus:outline-none focus:ring-1 resize-none ${
+              className={`w-full bg-white/2 border rounded-lg p-3.5 text-xs text-white placeholder-on-surface-variant/40 focus:outline-none focus:ring-1 resize-none ${
                 validationErrors.body
                   ? "border-red-500/50 focus:border-red-500 focus:ring-red-500/10"
-                  : "border-white/[0.06] focus:border-primary/40 focus:ring-primary/20"
+                  : "border-white/6 focus:border-primary/40 focus:ring-primary/20"
               }`}
             />
             {validationErrors.body && (
@@ -101,7 +101,7 @@ export function ComposeModal({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 border border-white/[0.06] text-white rounded-lg text-xs font-semibold hover:bg-white/[0.04] hover:border-white/[0.1] transition-all duration-150 cursor-pointer"
+              className="px-4 py-2 border border-white/6 text-white rounded-lg text-xs font-semibold hover:bg-white/4 hover:border-white/10 transition-all duration-150 cursor-pointer"
             >
               Cancel
             </button>
