@@ -25,7 +25,8 @@ export async function POST(req: Request) {
     }
 
     return Response.json(data);
-  } catch (error: any) {
-    return Response.json({ error: error.message || error }, { status: 500 });
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    return Response.json({ error: errorMessage }, { status: 500 });
   }
 }

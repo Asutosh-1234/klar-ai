@@ -1,13 +1,14 @@
-import { corsair } from "@/corsair"
 import { prisma } from '../config/prisma'
 import ENV from "../config/ENV"
+import { Account, User, Session } from "next-auth"
+import { JWT } from "next-auth/jwt"
 
-export async function handleSignIn({ account, user }: any) {
+export async function handleSignIn({ user }: { account: Account | null; user: User }) {
   if (!user?.id) return false
 
   try {
     const existingUser = await prisma.user.findUnique({
-      where: { email: user.email }
+      where: { email: user.email || "" }
     })
 
     if (!existingUser) {
@@ -37,20 +38,20 @@ export async function handleSignIn({ account, user }: any) {
 
   // Save to DB
   await prisma.user.upsert({
-    where: { email: user.email },
-    update: { name: user.name, avatar: user.image },
-    create: { id: user.id, email: user.email, name: user.name, avatar: user.image }
+    where: { email: user.email || "" },
+    update: { name: user.name, avatar: user.image || "" },
+    create: { id: user.id, email: user.email || "", name: user.name, avatar: user.image || "" }
   })
   
   return true
 }
 
-export async function handleJwt({ token, user }: any) {
+export async function handleJwt({ token, user }: { token: JWT; user?: User }) {
   if (user) token.id = user.id
   return token
 }
 
-export async function handleSession({ session, token }: any) {
-  if (session?.user) session.user.id = token.id
+export async function handleSession({ session, token }: { session: Session & { user?: { id?: string; name?: string | null; email?: string | null; image?: string | null } }; token: JWT }) {
+  if (session?.user) session.user.id = token.id as string
   return session
 }
