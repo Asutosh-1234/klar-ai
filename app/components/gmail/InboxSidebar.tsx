@@ -22,37 +22,44 @@ export function InboxSidebar({
   ];
 
   return (
-    <div className="lg:col-span-2 flex flex-col gap-2 overflow-y-auto custom-scrollbar">
+    <div className="lg:col-span-2 flex flex-col gap-2 p-4 bg-surface-sidebar border border-white/[0.04] rounded-xl h-full shadow-[0_4px_24px_rgba(0,0,0,0.5)]">
       <button
         onClick={onComposeClick}
-        className="flex items-center justify-center gap-2 px-4 py-3.5 mb-2 rounded-xl bg-primary-container text-white font-bold text-sm hover:scale-95 transition-transform duration-200 glow-button text-center cursor-pointer"
+        className="flex items-center justify-center gap-2 px-4 py-3 mb-4 rounded-lg bg-primary text-white font-semibold text-xs hover:bg-primary-hover hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 cursor-pointer shadow-[0_4px_12px_rgba(139,92,246,0.25)] w-full"
       >
-        <span className="material-symbols-outlined text-lg">edit</span>
+        <span className="material-symbols-outlined text-sm font-bold">edit</span>
         Compose
       </button>
 
-      {folders.map((folder) => (
-        <button
-          key={folder.id}
-          onClick={() => setSelectedFolder(folder.id)}
-          className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 text-left font-medium text-sm cursor-pointer ${
-            selectedFolder === folder.id
-              ? "bg-primary-container text-white font-semibold"
-              : "text-on-surface-variant hover:bg-white/5 hover:text-white"
-          }`}
-        >
-          <span className="material-symbols-outlined text-xl">{folder.icon}</span>
-          {folder.label}
-        </button>
-      ))}
+      <div className="flex-1 flex flex-col gap-1">
+        {folders.map((folder) => {
+          const isActive = selectedFolder === folder.id;
+          return (
+            <button
+              key={folder.id}
+              onClick={() => setSelectedFolder(folder.id)}
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-150 text-left text-xs cursor-pointer ${
+                isActive
+                  ? "bg-primary-container text-primary border-l-2 border-primary font-medium"
+                  : "text-on-surface-variant hover:bg-white/[0.02] hover:text-white font-normal"
+              }`}
+            >
+              <span className="material-symbols-outlined text-lg w-5 h-5 flex items-center justify-center shrink-0">
+                {folder.icon}
+              </span>
+              {folder.label}
+            </button>
+          );
+        })}
+      </div>
 
-      <hr className="border-white/5 my-2" />
+      <hr className="border-white/[0.04] my-3" />
 
       <button
         onClick={onSyncClick}
-        className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-white/10 text-xs font-semibold text-white bg-white/5 hover:bg-white/10 transition-colors duration-200 cursor-pointer"
+        className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg border border-white/[0.06] text-[11px] font-semibold text-white bg-white/[0.02] hover:bg-white/[0.04] hover:border-white/[0.1] active:scale-[0.98] transition-all duration-200 cursor-pointer w-full"
       >
-        <span className="material-symbols-outlined text-sm">refresh</span>
+        <span className="material-symbols-outlined text-xs">refresh</span>
         Sync Mail
       </button>
     </div>
