@@ -1,6 +1,11 @@
 'use client'
 
 import { GmailMessage, getHeader, getSenderName, formatDate } from "@/app/lib/utils/gmail";
+import { EmailCheckbox } from "./EmailCheckbox";
+import { EmailStar } from "./EmailStar";
+import { EmailSender } from "./EmailSender";
+import { EmailTextContent } from "./EmailTextContent";
+import { EmailRowActions } from "./EmailRowActions";
 
 interface MailListProps {
   messages: GmailMessage[];
@@ -157,7 +162,7 @@ export function MailList({
                 <div
                   key={msg.id}
                   onClick={() => onSelectMessage(msg)}
-                  className={`email-row group flex items-center h-[42px] px-6 border-l-2 cursor-pointer border-b border-white/3 transition-all duration-150 ${
+                  className={`email-row group flex items-center w-full overflow-hidden h-[42px] px-6 border-l-2 cursor-pointer border-b border-white/3 transition-all duration-150 ${
                     isSelected
                       ? "border-primary bg-primary/5"
                       : "border-transparent hover:bg-white/2"
@@ -165,85 +170,38 @@ export function MailList({
                 >
                   {/* Checkbox + Star */}
                   <div className="flex items-center gap-4 w-16 shrink-0">
-                    <input
-                      type="checkbox"
-                      onClick={(e) => e.stopPropagation()}
-                      className="w-4 h-4 rounded border-white/20 bg-transparent text-primary focus:ring-primary/20 cursor-pointer"
-                    />
-                    <span
-                      onClick={(e) => {
-                        e.stopPropagation();
+                    <EmailCheckbox checked={false} />
+                    <EmailStar
+                      isStarred={!!isStarred}
+                      onToggle={() => {
                         // Gmail label sync/update logic would happen in a real action
                       }}
-                      className={`material-symbols-outlined text-[18px] transition-colors cursor-pointer ${
-                        isStarred ? "text-amber-400 font-fill text-fill-1" : "text-on-surface-variant hover:text-white"
-                      }`}
-                      style={{ fontVariationSettings: isStarred ? "'FILL' 1" : "'FILL' 0" }}
-                    >
-                      star
-                    </span>
+                    />
                   </div>
 
                   {/* Sender Name */}
-                  <div className={`w-48 shrink-0 text-sm truncate pr-4 ${isUnread ? "font-bold text-white" : "text-on-surface-variant font-normal"}`}>
-                    {displayName}
-                  </div>
+                  <EmailSender name={displayName} isUnread={!!isUnread} />
 
                   {/* Subject + Snippet on a single line with " - " separator */}
-                  <div className="flex-1 flex items-center min-w-0 pr-4 text-sm truncate">
-                    <span className={`truncate shrink-0 ${isUnread ? "font-bold text-white" : "text-on-surface font-normal"}`}>
-                      {subject}
-                    </span>
-                    <span className="mx-2 text-on-surface-variant/40 shrink-0 select-none">—</span>
-                    <span className="text-on-surface-variant truncate font-normal">
-                      {msg.snippet}
-                    </span>
-                  </div>
+                  <EmailTextContent
+                    subject={subject}
+                    snippet={msg.snippet || ""}
+                    isUnread={!!isUnread}
+                  />
 
-                  {/* Date / Hover Actions */}
-                  <div className="w-24 shrink-0 flex justify-end text-right relative h-5 items-center">
+                  {/* Date / Hover Actions (Fixed Slot Width: 80px) */}
+                  <div className="w-20 shrink-0 flex justify-end text-right relative h-5 items-center">
                     {/* Date */}
                     <span className={`text-xs font-medium group-hover:hidden whitespace-nowrap ${isUnread ? "font-bold text-white" : "text-on-surface-variant"}`}>
                       {formatDate(dateVal)}
                     </span>
-                    {/* Action Icons (fade in on hover) */}
-                    <div className="hidden group-hover:flex items-center gap-1.5">
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          archiveMessage(msg.id!);
-                        }}
-                        title="Archive"
-                        className="text-on-surface-variant hover:text-white p-0.5 rounded hover:bg-white/10 transition-colors"
-                      >
-                        <span className="material-symbols-outlined text-sm">archive</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          deleteMessage(msg.id!);
-                        }}
-                        title="Delete"
-                        className="text-on-surface-variant hover:text-white p-0.5 rounded hover:bg-white/10 transition-colors"
-                      >
-                        <span className="material-symbols-outlined text-sm">delete</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          toggleReadStatus(msg.id!, !!isUnread);
-                        }}
-                        title={isUnread ? "Mark as Read" : "Mark as Unread"}
-                        className="text-on-surface-variant hover:text-white p-0.5 rounded hover:bg-white/10 transition-colors"
-                      >
-                        <span className="material-symbols-outlined text-sm">
-                          {isUnread ? "drafts" : "mail"}
-                        </span>
-                      </button>
-                    </div>
+                    {/* Action Icons (fade in on hover in same slot) */}
+                    <EmailRowActions
+                      isUnread={!!isUnread}
+                      onArchive={() => archiveMessage(msg.id!)}
+                      onDelete={() => deleteMessage(msg.id!)}
+                      onToggleRead={() => toggleReadStatus(msg.id!, !!isUnread)}
+                    />
                   </div>
                 </div>
               );

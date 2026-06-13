@@ -1,13 +1,14 @@
 export function Footer() {
   return (
-    <footer className="w-full py-section-gap bg-surface-container-lowest border-t border-white/5">
+    <footer className="w-full py-20 bg-surface-sidebar border-t border-white/5">
       <div className="max-w-container-max mx-auto px-gutter grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-stack-lg text-left">
         <div className="col-span-2 lg:col-span-2 flex flex-col gap-6">
-          <div className="font-headline-md text-headline-md font-bold text-on-background">
-            Klar AI
+          <div className="font-headline-md text-headline-md font-bold text-on-background flex items-center gap-1.5">
+            <span className="material-symbols-outlined text-primary text-[20px] font-bold">stars</span>
+            Aether
           </div>
-          <p className="text-on-surface-variant max-w-xs">Intelligence in motion. The fastest way to process your digital life.</p>
-          <p className="text-on-surface-variant/50 text-sm mt-auto">© 2024 Klar AI.</p>
+          <p className="text-on-surface-variant max-w-xs">The premium AI operating system for modern executives.</p>
+          <p className="text-on-surface-variant/50 text-sm mt-auto">© 2024 Aether AI. SOC2 Type II Certified.</p>
         </div>
         <div className="flex flex-col gap-4">
           <h4 className="font-semibold text-on-background mb-2">Product</h4>

@@ -22,6 +22,7 @@
     "@prisma/client": "^7.8.0",
     "corsair": "^0.1.75",
     "dotenv": "^17.4.2",
+    "framer-motion": "^12.40.0",
     "next": "16.2.7",
     "next-auth": "^4.24.14",
     "passport": "^0.7.0",
