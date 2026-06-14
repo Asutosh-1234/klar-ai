@@ -2,7 +2,8 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/com
 
 export function Features() {
   return (
-    <section className="py-section-gap">
+    <section id="features" className="py-section-gap">
+
       <div className="max-w-container-max mx-auto px-gutter">
         <div className="mb-20">
           <h2 className="font-headline-lg text-headline-lg font-semibold mb-4 text-on-background">Engineered for focus.</h2>
