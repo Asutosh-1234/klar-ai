@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { SignOutButton } from "@/app/components/SignOutButton";
+import { SignOutButton } from "@/components/SignOutButton";
 
 import { ConnectHeaderProps } from "@/app/lib/types";
 
