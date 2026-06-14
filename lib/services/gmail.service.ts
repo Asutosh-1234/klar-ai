@@ -1,7 +1,7 @@
 import { corsair } from "@/corsair";
 import { prisma } from "../config/prisma";
 import ENV from "../config/ENV";
-import type { GmailServiceTypes } from "@/app/lib/types";
+import type { GmailServiceTypes } from "@/lib/types";
 
 export const getAllMails = async (params: GmailServiceTypes) => {
   const mails = await corsair.withTenant(params.tenentId).gmail.api.messages.list({

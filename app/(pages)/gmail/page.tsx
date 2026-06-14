@@ -1,7 +1,7 @@
 import { getServerSession } from "next-auth";
-import { authProvider } from "@/app/lib/auth/config";
+import { authProvider } from "@/lib/auth/config";
 import { redirect } from "next/navigation";
-import { prisma } from "@/app/lib/config/prisma";
+import { prisma } from "@/lib/config/prisma";
 import Image from "next/image";
 import { SignOutButton } from "@/components/SignOutButton";
 import { InboxContainer } from "@/components/gmail/InboxContainer";

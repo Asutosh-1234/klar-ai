@@ -1,6 +1,6 @@
 'use client'
 
-import { EmailSenderProps } from "@/app/lib/types";
+import { EmailSenderProps } from "@/lib/types";
 
 export function EmailSender({ name, isUnread, className = "" }: EmailSenderProps) {
   return (

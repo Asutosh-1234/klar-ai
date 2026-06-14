@@ -1,7 +1,7 @@
 import { processOAuthCallback } from 'corsair/oauth'
 import { NextRequest, NextResponse } from 'next/server'
 import { corsair } from '@/corsair'
-import ENV from '@/app/lib/config/ENV'
+import ENV from '@/lib/config/ENV'
 
 
 const REDIRECT_URI = `${ENV.NEXTAUTH_URL}/api/auth`

@@ -1,5 +1,5 @@
 import { NextResponse, NextRequest } from "next/server";
-import { getSessionTenantId } from "@/app/lib/auth/session";
+import { getSessionTenantId } from "@/lib/auth/session";
 import { corsair } from "@/corsair";
 
 export async function POST(request: NextRequest) {

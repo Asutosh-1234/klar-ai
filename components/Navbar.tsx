@@ -2,7 +2,7 @@
 import { signIn } from 'next-auth/react'
 import { Button, buttonVariants } from "@/components/ui/button"
 
-import { NavbarProps } from "@/app/lib/types";
+import { NavbarProps } from "@/lib/types";
 
 export function Navbar({ session }: NavbarProps) {
   const handleAuth = (e: React.MouseEvent) => {

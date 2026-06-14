@@ -1,4 +1,4 @@
-import { EmailTemplateProps } from "@/app/lib/types";
+import { EmailTemplateProps } from "@/lib/types";
 
 export function WelcomeEmail({firstName, email, avatar}: EmailTemplateProps) {
   return (

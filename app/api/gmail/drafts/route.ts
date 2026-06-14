@@ -1,8 +1,8 @@
 import { NextResponse, NextRequest } from "next/server";
-import { getSessionTenantId } from "@/app/lib/auth/session";
-import { getAllDraftMails } from "@/app/lib/services/gmail.service";
+import { getSessionTenantId } from "@/lib/auth/session";
+import { getAllDraftMails } from "@/lib/services/gmail.service";
 import { corsair } from "@/corsair";
-import { createDraftSchema } from "@/app/lib/validations/draft";
+import { createDraftSchema } from "@/lib/validations/draft";
 
 export async function GET(request: NextRequest) {
   try {

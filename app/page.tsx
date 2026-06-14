@@ -7,7 +7,7 @@ import { Pricing } from "@/components/Pricing";
 import { Footer } from "@/components/Footer";
 
 import { getServerSession } from "next-auth";
-import { authProvider } from "@/app/lib/auth/config";
+import { authProvider } from "@/lib/auth/config";
 
 export default async function Home() {
   const session = await getServerSession(authProvider);

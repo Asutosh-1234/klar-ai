@@ -2,7 +2,7 @@
 
 import { signOut } from 'next-auth/react';
 
-import { UserProfile, InboxSidebarProps } from '@/app/lib/types';
+import { UserProfile, InboxSidebarProps } from '@/lib/types';
 
 export function InboxSidebar({
   user,

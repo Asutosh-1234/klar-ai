@@ -1,6 +1,6 @@
 'use client'
 
-import { EmailRowActionsProps } from "@/app/lib/types";
+import { EmailRowActionsProps } from "@/lib/types";
 
 export function EmailRowActions({
   isUnread,

@@ -1,7 +1,7 @@
 'use client'
 
-import { getHeader, getSenderName, formatDate } from "@/app/lib/utils/gmail";
-import { GmailMessage, MailListProps } from "@/app/lib/types";
+import { getHeader, getSenderName, formatDate } from "@/lib/utils/gmail";
+import { GmailMessage, MailListProps } from "@/lib/types";
 import { EmailCheckbox } from "./EmailCheckbox";
 import { EmailStar } from "./EmailStar";
 import { EmailSender } from "./EmailSender";

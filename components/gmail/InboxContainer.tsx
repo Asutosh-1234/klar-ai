@@ -1,14 +1,14 @@
 'use client'
 
-import { useGmailInbox } from "@/app/lib/hooks/gmail/useGmailInbox";
-import { useGmailDrafts } from "@/app/lib/hooks/gmail/useGmailDrafts";
+import { useGmailInbox } from "@/lib/hooks/gmail/useGmailInbox";
+import { useGmailDrafts } from "@/lib/hooks/gmail/useGmailDrafts";
 import { InboxSidebar } from "./InboxSidebar";
 import { ComposeModal } from "./ComposeModal";
 import { MailList } from "./MailList";
 import { MailDetails } from "./MailDetails";
 import { id } from "date-fns/locale";
 
-import { UserProfile, InboxContainerProps } from "@/app/lib/types";
+import { UserProfile, InboxContainerProps } from "@/lib/types";
 
 export function InboxContainer({ user }: InboxContainerProps) {
   const {

@@ -1,6 +1,6 @@
 'use client'
 
-import { EmailTextContentProps } from "@/app/lib/types";
+import { EmailTextContentProps } from "@/lib/types";
 
 export function EmailTextContent({ subject, snippet, isUnread, className = "" }: EmailTextContentProps) {
   return (

@@ -2,8 +2,8 @@ import { generateOAuthUrl } from 'corsair/oauth';
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 import { corsair } from '@/corsair';
-import { getSessionTenantId } from '@/app/lib/auth/session';
-import ENV from '@/app/lib/config/ENV';
+import { getSessionTenantId } from '@/lib/auth/session';
+import ENV from '@/lib/config/ENV';
 
 const REDIRECT_URI = `${ENV.NEXTAUTH_URL}/api/auth`;
 

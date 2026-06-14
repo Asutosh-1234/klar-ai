@@ -1,4 +1,4 @@
-import { GmailMessage, GmailMessagePart } from "@/app/lib/types";
+import { GmailMessage, GmailMessagePart } from "@/lib/types";
 export type { GmailMessage, GmailMessagePart };
 
 export const decodeBase64 = (str: string) => {

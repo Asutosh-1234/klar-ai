@@ -1,7 +1,7 @@
 'use client'
 
 import * as React from "react";
-import { getHeader, getSenderInitials, formatDate, getMessageBody, getSenderName } from "@/app/lib/utils/gmail";
+import { getHeader, getSenderInitials, formatDate, getMessageBody, getSenderName } from "@/lib/utils/gmail";
 import { 
   GmailMessage, 
   MailActionBarProps, 
@@ -9,7 +9,7 @@ import {
   MailBodyProps, 
   MailReplyBarProps, 
   MailDetailsProps 
-} from "@/app/lib/types";
+} from "@/lib/types";
 
 // Helper function to extract and format the iframe source document
 const getIframeSrcDoc = (msg: GmailMessage) => {

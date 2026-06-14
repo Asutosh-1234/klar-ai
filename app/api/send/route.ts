@@ -1,5 +1,5 @@
-import { WelcomeEmail } from '@/app/components/emails/welcome';
-import ENV from '@/app/lib/config/ENV';
+import { WelcomeEmail } from '@/components/emails/welcome';
+import ENV from '@/lib/config/ENV';
 import { Resend } from 'resend';
 
 const resend = new Resend(ENV.RESEND_API_KEY);

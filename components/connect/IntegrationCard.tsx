@@ -1,4 +1,4 @@
-import { IntegrationCardProps } from "@/app/lib/types";
+import { IntegrationCardProps } from "@/lib/types";
 
 export function IntegrationCard({
   title,

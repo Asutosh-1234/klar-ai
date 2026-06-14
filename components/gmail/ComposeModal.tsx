@@ -1,6 +1,6 @@
 'use client'
 
-import { ComposeModalProps } from "@/app/lib/types";
+import { ComposeModalProps } from "@/lib/types";
 
 export function ComposeModal({
   isOpen,

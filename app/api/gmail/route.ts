@@ -1,6 +1,6 @@
 import { NextResponse, NextRequest } from "next/server";
-import { getSessionTenantId } from "@/app/lib/auth/session";
-import { getAllMails } from "@/app/lib/services/gmail.service";
+import { getSessionTenantId } from "@/lib/auth/session";
+import { getAllMails } from "@/lib/services/gmail.service";
 import { corsair } from "@/corsair";
 
 export async function GET(request: NextRequest) {
