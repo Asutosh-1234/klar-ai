@@ -1,5 +1,6 @@
 'use client'
 import { signIn } from 'next-auth/react'
+import { Button, buttonVariants } from "@/components/ui/button"
 
 interface NavbarProps {
   session?: {
@@ -41,24 +42,28 @@ export function Navbar({ session }: NavbarProps) {
           {isLoggedIn ? (
             <a 
               href="/connect"
-              className="px-6 py-2 rounded-full bg-primary-container text-white font-semibold hover:scale-95 transition-transform duration-200 glow-button cursor-pointer text-center"
+              className={buttonVariants({
+                variant: "default",
+                className: "h-9 px-6 rounded-full bg-primary-container text-white font-semibold hover:scale-95 transition-transform duration-200 glow-button cursor-pointer text-center flex items-center justify-center border-0 hover:bg-primary-container/90"
+              })}
             >
               Go to Dashboard
             </a>
           ) : (
             <>
-              <button 
+              <Button 
+                variant="ghost"
                 onClick={handleAuth}
-                className="hidden md:block text-on-surface-variant hover:text-primary transition-colors duration-200 cursor-pointer bg-transparent border-0"
+                className="hidden md:flex text-on-surface-variant hover:text-primary transition-colors duration-200 cursor-pointer bg-transparent border-0 hover:bg-transparent px-3 py-1 font-semibold"
               >
                 Login
-              </button>
-              <button 
+              </Button>
+              <Button 
                 onClick={handleAuth}
-                className="px-6 py-2 rounded-full bg-primary-container text-white font-semibold hover:scale-95 transition-transform duration-200 glow-button cursor-pointer"
+                className="h-9 px-6 rounded-full bg-primary-container text-white font-semibold hover:scale-95 transition-transform duration-200 glow-button cursor-pointer border-0 hover:bg-primary-container/90"
               >
                 Get Started
-              </button>
+              </Button>
             </>
           )}
         </div>

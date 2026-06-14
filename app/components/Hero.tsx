@@ -2,6 +2,9 @@
 import { useState, useEffect } from 'react'
 import { signIn } from 'next-auth/react'
 import { motion } from 'framer-motion'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Avatar, AvatarImage, AvatarFallback, AvatarGroup, AvatarGroupCount } from '@/components/ui/avatar'
 
 export function Hero() {
   const handleAuth = (e: React.MouseEvent) => {
@@ -61,10 +64,14 @@ export function Hero() {
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, ease: "easeOut" }}
-            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 mb-6 backdrop-blur-sm"
           >
-            <span className="material-symbols-outlined text-[14px] text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>stars</span>
-            <span className="font-mono text-[9px] uppercase tracking-widest text-on-surface-variant font-bold">The Future of Work</span>
+            <Badge
+              variant="outline"
+              className="inline-flex items-center gap-2 px-3 py-1.5 h-auto rounded-full bg-white/5 border-white/10 mb-6 backdrop-blur-sm text-on-surface-variant"
+            >
+              <span className="material-symbols-outlined text-[14px] text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>stars</span>
+              <span className="font-mono text-[9px] uppercase tracking-widest font-bold">The Future of Work</span>
+            </Badge>
           </motion.div>
 
           {/* Headline */}
@@ -111,18 +118,19 @@ export function Hero() {
             transition={{ duration: 0.3, ease: "easeOut", delay: 0.60 }}
             className="flex gap-4 mb-10"
           >
-            <button
+            <Button
               onClick={handleAuth}
-              className="px-6 py-3 rounded-full bg-primary text-black font-semibold text-xs hover:scale-95 transition-all duration-200 glow-button flex items-center gap-2 cursor-pointer shadow-lg shadow-primary/10"
+              className="h-11 px-6 rounded-full bg-primary text-black font-semibold text-xs hover:scale-95 transition-all duration-200 glow-button flex items-center gap-2 cursor-pointer shadow-lg shadow-primary/10 border-0"
             >
               Get Started <span className="material-symbols-outlined" style={{ fontSize: '1.2em' }}>arrow_forward</span>
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={handleAuth}
-              className="px-6 py-3 rounded-full bg-transparent border border-white/20 text-white font-semibold text-xs hover:bg-white/5 transition-all duration-200 cursor-pointer"
+              variant="outline"
+              className="h-11 px-6 rounded-full bg-transparent border-white/20 text-white font-semibold text-xs hover:bg-white/5 hover:text-white transition-all duration-200 cursor-pointer"
             >
               Request Demo
-            </button>
+            </Button>
           </motion.div>
 
           {/* Social Proof avatars */}
@@ -132,17 +140,19 @@ export function Hero() {
             transition={{ duration: 0.8, delay: 0.6 }}
             className="flex items-center gap-3"
           >
-            <div className="flex -space-x-3">
-              <div className="w-8 h-8 rounded-full border-2 border-background overflow-hidden bg-surface-card shadow-lg">
-                <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuAJHj5C3rmaZFTeZj9ErBV2co6jpaYhF6hoyjbOOdLRE9riMZHmDcVvVbu0A6YaWJoHIeW-Eqvw-W6YhpTWyzPJUxQxX-go_kyMzbrs8VuHkat4r-7P5Q7v4R_CuS7f4OqGFU8rT7iQM75UUGOQ4rVWqNUfj-RwNEHGMAxSnGFu9raoVRT-2XQw9C4ZxFiCAJA3hnThEuqD8avqipiVCfVr7unJFWH2WqVKkatefnQDM69RRDAHWIqt" alt="Executive" className="w-full h-full object-cover" />
-              </div>
-              <div className="w-8 h-8 rounded-full border-2 border-background overflow-hidden bg-surface-card shadow-lg">
-                <img src="https://lh3.googleusercontent.com/aida-public/AB6AXu8xZ7P4bQ2sF2WZCDh5X2lj_rQR_cGgx-MhAGC8JEzrRMhE57rGqjtamnWtjg_2WZqKTGJ1aLpD6RBN6viplWu7Wnn__JRLyFV_u5N8yospB-zv3M6cnV3oIdaddw9IRJ0_9X7JF0lxiTCBA5DT1S89NUxYjM_wKP5oGy0bhqPW4nT2XSSeC2VxTHWIPkdPhE-mrN95YBEMm8u0INYg0xv2OHQMA80rS1N8o-AbZppWPlThSVARiE" alt="Executive" className="w-full h-full object-cover" />
-              </div>
-              <div className="w-8 h-8 rounded-full border-2 border-background bg-primary-container flex items-center justify-center shadow-lg border-primary/20">
-                <span className="text-primary font-bold text-[9px]">+5k</span>
-              </div>
-            </div>
+            <AvatarGroup className="-space-x-3">
+              <Avatar className="w-8 h-8 size-8 border-2 border-background overflow-hidden bg-surface-card shadow-lg">
+                <AvatarImage src="https://lh3.googleusercontent.com/aida-public/AB6AXuAJHj5C3rmaZFTeZj9ErBV2co6jpaYhF6hoyjbOOdLRE9riMZHmDcVvVbu0A6YaWJoHIeW-Eqvw-W6YhpTWyzPJUxQxX-go_kyMzbrs8VuHkat4r-7P5Q7v4R_CuS7f4OqGFU8rT7iQM75UUGOQ4rVWqNUfj-RwNEHGMAxSnGFu9raoVRT-2XQw9C4ZxFiCAJA3hnThEuqD8avqipiVCfVr7unJFWH2WqVKkatefnQDM69RRDAHWIqt" alt="Executive" />
+                <AvatarFallback>E1</AvatarFallback>
+              </Avatar>
+              <Avatar className="w-8 h-8 size-8 border-2 border-background overflow-hidden bg-surface-card shadow-lg">
+                <AvatarImage src="https://lh3.googleusercontent.com/aida-public/AB6AXu8xZ7P4bQ2sF2WZCDh5X2lj_rQR_cGgx-MhAGC8JEzrRMhE57rGqjtamnWtjg_2WZqKTGJ1aLpD6RBN6viplWu7Wnn__JRLyFV_u5N8yospB-zv3M6cnV3oIdaddw9IRJ0_9X7JF0lxiTCBA5DT1S89NUxYjM_wKP5oGy0bhqPW4nT2XSSeC2VxTHWIPkdPhE-mrN95YBEMm8u0INYg0xv2OHQMA80rS1N8o-AbZppWPlThSVARiE" alt="Executive" />
+                <AvatarFallback>E2</AvatarFallback>
+              </Avatar>
+              <AvatarGroupCount className="w-8 h-8 size-8 rounded-full border-2 border-background bg-primary-container flex items-center justify-center shadow-lg border-primary/20 text-primary font-bold text-[9px]">
+                +5k
+              </AvatarGroupCount>
+            </AvatarGroup>
             <span className="font-mono text-[9px] text-on-surface-variant font-bold uppercase tracking-wider">Trusted by Fortune 500 Leaders</span>
           </motion.div>
         </div>
@@ -188,9 +198,12 @@ export function Hero() {
                       <span className="font-bold text-white text-xs truncate">Client Portfolio Review</span>
                       <span className="text-[10px] text-on-surface/50 truncate">From: Jonathan Sterling</span>
                     </div>
-                    <span className="bg-primary/10 text-primary text-[8px] px-2 py-0.5 rounded-full border border-primary/20 font-bold uppercase tracking-wider shrink-0 shadow-[0_0_10px_rgba(242,202,80,0.1)]">
+                    <Badge
+                      variant="outline"
+                      className="bg-primary/10 text-primary text-[8px] px-2 py-0.5 rounded-full border border-primary/20 font-bold uppercase tracking-wider shrink-0 shadow-[0_0_10px_rgba(242,202,80,0.1)] h-auto"
+                    >
                       AI Draft Ready
-                    </span>
+                    </Badge>
                   </div>
 
                   <div className="bg-surface-card/20 p-4 rounded-xl border border-white/5 flex justify-between items-center opacity-60">
