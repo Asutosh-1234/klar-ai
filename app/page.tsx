@@ -1,10 +1,10 @@
-import { Navbar } from "@/app/components/Navbar";
-import { Hero } from "@/app/components/Hero";
-import { SocialProof } from "@/app/components/SocialProof";
-import { Features } from "@/app/components/Features";
-import { CTA } from "@/app/components/CTA";
-import { Pricing } from "@/app/components/Pricing";
-import { Footer } from "@/app/components/Footer";
+import { Navbar } from "@/components/Navbar";
+import { Hero } from "@/components/Hero";
+import { SocialProof } from "@/components/SocialProof";
+import { Features } from "@/components/Features";
+import { CTA } from "@/components/CTA";
+import { Pricing } from "@/components/Pricing";
+import { Footer } from "@/components/Footer";
 
 import { getServerSession } from "next-auth";
 import { authProvider } from "@/app/lib/auth/config";

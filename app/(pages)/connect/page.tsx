@@ -2,9 +2,9 @@ import { getServerSession } from "next-auth";
 import { authProvider } from "@/app/lib/auth/config";
 import { redirect } from "next/navigation";
 import { prisma } from "@/app/lib/config/prisma";
-import { ConnectHeader } from "@/app/components/connect/ConnectHeader";
-import { IntegrationCard } from "@/app/components/connect/IntegrationCard";
-import { SecurityDisclosures } from "@/app/components/connect/SecurityDisclosures";
+import { ConnectHeader } from "@/components/connect/ConnectHeader";
+import { IntegrationCard } from "@/components/connect/IntegrationCard";
+import { SecurityDisclosures } from "@/components/connect/SecurityDisclosures";
 
 export default async function ConnectPage() {
   const session = await getServerSession(authProvider);

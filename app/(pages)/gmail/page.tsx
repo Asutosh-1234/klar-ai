@@ -3,8 +3,8 @@ import { authProvider } from "@/app/lib/auth/config";
 import { redirect } from "next/navigation";
 import { prisma } from "@/app/lib/config/prisma";
 import Image from "next/image";
-import { SignOutButton } from "@/app/components/SignOutButton";
-import { InboxContainer } from "@/app/components/gmail/InboxContainer";
+import { SignOutButton } from "@/components/SignOutButton";
+import { InboxContainer } from "@/components/gmail/InboxContainer";
 
 
 export default async function GmailPage() {
