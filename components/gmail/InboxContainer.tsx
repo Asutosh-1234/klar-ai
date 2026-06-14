@@ -79,7 +79,7 @@ export function InboxContainer({ user }: InboxContainerProps) {
         {/* TopNavBar */}
         <header className="flex justify-between items-center w-full px-6 h-16 bg-background border-b border-white/5 z-40 shrink-0">
           <form onSubmit={onSearchSubmit} className="flex items-center flex-1 max-w-2xl">
-            <div className="relative w-full">
+            <div className="relative w-full rounded-md border-2">
               <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-lg">
                 search
               </span>
@@ -88,7 +88,7 @@ export function InboxContainer({ user }: InboxContainerProps) {
                 placeholder="Search mail and attachments..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-surface-sidebar border-none rounded-full py-2 pl-10 pr-4 text-xs focus:ring-1 focus:ring-primary/40 placeholder:text-outline transition-all text-white font-body-md"
+                className="w-full bg-surface-sidebar border-none rounded-full py-2 pl-10 pr-4 text-xs focus:ring-1 focus:ring-primary/40 placeholder:text-outline transition-all text-shadow-zinc-600 font-body-md"
               />
             </div>
           </form>

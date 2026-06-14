@@ -13,8 +13,8 @@ export function Navbar({ session }: NavbarProps) {
   const isLoggedIn = !!session?.user;
 
   return (
-    <nav className="fixed top-0 w-full z-50 bg-background/80 backdrop-blur-xl border-b border-white/10">
-      <div className="max-w-container-max mx-auto px-gutter h-20 flex items-center justify-between">
+    <nav className="fixed top-0 w-full z-50 bg-background/80 backdrop-blur-xl border-b border-white/10 h-16">
+      <div className="max-w-container-max mx-auto px-gutter h-full flex items-center justify-between">
         <div className="font-headline-md text-headline-md font-bold text-on-background tracking-tighter">
           Klar AI
         </div>

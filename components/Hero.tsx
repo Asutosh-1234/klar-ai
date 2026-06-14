@@ -14,7 +14,7 @@ export function Hero() {
   }
 
   return (
-    <section className="relative min-h-[710px] flex items-center justify-center px-gutter overflow-hidden bg-background">
+    <section className="relative min-h-[690px] flex items-center justify-center px-gutter overflow-hidden bg-background">
       {/* Grid pattern */}
       <div className="absolute inset-0 bg-grid-pattern pointer-events-none opacity-50"></div>
 

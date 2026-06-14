@@ -13,7 +13,7 @@ export default async function Home() {
   const session = await getServerSession(authProvider);
 
   return (
-    <div className="relative min-h-screen bg-background text-on-background flex flex-col pt-20">
+    <div className="relative min-h-screen bg-background text-on-background flex flex-col pt-16">
       <Navbar session={session} />
       <main className="flex-1">
         <Hero />

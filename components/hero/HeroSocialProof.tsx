@@ -19,7 +19,7 @@ export function HeroSocialProof() {
           <AvatarImage src="https://lh3.googleusercontent.com/aida-public/AB6AXu8xZ7P4bQ2sF2WZCDh5X2lj_rQR_cGgx-MhAGC8JEzrRMhE57rGqjtamnWtjg_2WZqKTGJ1aLpD6RBN6viplWu7Wnn__JRLyFV_u5N8yospB-zv3M6cnV3oIdaddw9IRJ0_9X7JF0lxiTCBA5DT1S89NUxYjM_wKP5oGy0bhqPW4nT2XSSeC2VxTHWIPkdPhE-mrN95YBEMm8u0INYg0xv2OHQMA80rS1N8o-AbZppWPlThSVARiE" alt="Executive" />
           <AvatarFallback>E2</AvatarFallback>
         </Avatar>
-        <AvatarGroupCount className="w-8 h-8 size-8 rounded-full border-2 border-background bg-primary-container flex items-center justify-center shadow-lg border-primary/20 text-primary font-bold text-[9px]">
+        <AvatarGroupCount className="w-8 h-8 size-8 rounded-full border-2 border-background bg-primary-container flex items-center justify-center shadow-lg text-primary font-bold text-[9px]">
           +5k
         </AvatarGroupCount>
       </AvatarGroup>
