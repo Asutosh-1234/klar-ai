@@ -8,7 +8,7 @@ interface MailDetailsProps {
   onSendDraft: (draftId: string) => void;
   onClose: () => void;
   onArchive?: (id: string) => void;
-  onDelete?: (id: string) => void;
+  onDelete: (id: string) => void; // this is the bug
   onToggleRead?: (id: string, currentlyUnread: boolean) => void;
 }
 
@@ -111,10 +111,8 @@ export function MailDetails({
   };
 
   const handleDelete = () => {
-    if (onDelete) {
       onDelete(message.id!);
       onClose();
-    }
   };
 
   const handleToggleRead = () => {
@@ -214,11 +212,10 @@ export function MailDetails({
         </div>
       </div>
 
-      {/* Email Content Area */}
-      <div className="flex-1 overflow-y-auto custom-scrollbar p-6 md:p-10 flex flex-col items-center">
-        {/* Email Header Info */}
-        <div className="w-full max-w-[800px] mb-6">
-          <h2 className="font-headline-md text-2xl font-bold mb-4 text-white leading-tight">
+      {/* Static Email Header Info */}
+      <div className="w-full border-b border-white/5 bg-[#0A0A0F] px-6 py-4 shrink-0 flex justify-center z-10 shadow-md">
+        <div className="w-full max-w-[800px]">
+          <h2 className="font-headline-md text-xl md:text-2xl font-bold mb-3 text-white leading-tight">
             {subject}
           </h2>
           <div className="flex items-center gap-4">
@@ -237,21 +234,25 @@ export function MailDetails({
             </div>
           </div>
         </div>
+      </div>
 
+      {/* Scrollable Email Body Content */}
+      <div className="flex-1 overflow-y-auto custom-scrollbar p-6 md:p-8 flex flex-col items-center">
         {/* Main Content Card */}
-        <div className="w-full max-w-[800px] rounded-2xl bg-surface-card border border-white/5 p-6 md:p-8 shadow-2xl relative overflow-hidden">
+        <div className="w-full max-w-[800px] rounded-2xl bg-surface-card border border-white/5 p-6 md:p-8 shadow-2xl relative">
           <iframe
             title="Email Body"
             srcDoc={getIframeSrcDoc(message)}
             onLoad={handleIframeLoad}
             className="w-full min-h-[300px] border-0 bg-transparent transition-all duration-300"
             sandbox="allow-popups allow-same-origin"
-            scrolling="no"
           />
         </div>
+      </div>
 
-        {/* Quick Reply Bar */}
-        <div className="w-full max-w-[800px] mt-6 flex gap-4">
+      {/* Static Quick Reply Bar */}
+      <div className="w-full border-t border-white/5 bg-[#0A0A0F] px-6 py-4 shrink-0 flex justify-center z-10">
+        <div className="w-full max-w-[800px] flex gap-4">
           <div className="flex-1 rounded-xl bg-surface-card border border-white/5 p-4 flex items-center gap-4 cursor-text hover:border-primary/30 transition-all">
             <span className="material-symbols-outlined text-on-surface-variant">reply</span>
             <span className="text-on-surface-variant/60 text-xs font-body-md">Reply to sender...</span>
@@ -260,9 +261,6 @@ export function MailDetails({
             <span className="material-symbols-outlined">forward</span>
           </div>
         </div>
-
-        {/* Bottom spacing */}
-        <div className="h-20 shrink-0"></div>
       </div>
     </div>
   );

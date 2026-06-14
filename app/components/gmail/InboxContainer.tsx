@@ -6,6 +6,7 @@ import { InboxSidebar } from "./InboxSidebar";
 import { ComposeModal } from "./ComposeModal";
 import { MailList } from "./MailList";
 import { MailDetails } from "./MailDetails";
+import { id } from "date-fns/locale";
 
 interface UserProfile {
   name: string | null;
@@ -169,6 +170,7 @@ export function InboxContainer({ user }: InboxContainerProps) {
               sendingDraftId={sendingDraftId}
               onSendDraft={handleSendDraft}
               onClose={() => setSelectedMessage(null)}
+              onDelete={deleteMessage}
             />
           )}
         </div>
