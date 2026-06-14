@@ -8,15 +8,7 @@ import { MailList } from "./MailList";
 import { MailDetails } from "./MailDetails";
 import { id } from "date-fns/locale";
 
-interface UserProfile {
-  name: string | null;
-  email: string | null;
-  image: string | null;
-}
-
-interface InboxContainerProps {
-  user: UserProfile;
-}
+import { UserProfile, InboxContainerProps } from "@/app/lib/types";
 
 export function InboxContainer({ user }: InboxContainerProps) {
   const {

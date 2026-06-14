@@ -2,19 +2,7 @@
 
 import { signOut } from 'next-auth/react';
 
-interface UserProfile {
-  name: string | null;
-  email: string | null;
-  image: string | null;
-}
-
-interface InboxSidebarProps {
-  user: UserProfile;
-  selectedFolder: string;
-  setSelectedFolder: (folder: string) => void;
-  onComposeClick: () => void;
-  onSyncClick: () => void;
-}
+import { UserProfile, InboxSidebarProps } from '@/app/lib/types';
 
 export function InboxSidebar({
   user,

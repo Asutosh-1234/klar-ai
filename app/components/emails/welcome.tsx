@@ -1,8 +1,4 @@
-interface EmailTemplateProps {
-  firstName: string;
-  email: string;
-  avatar?: string;
-}
+import { EmailTemplateProps } from "@/app/lib/types";
 
 export function WelcomeEmail({firstName, email, avatar}: EmailTemplateProps) {
   return (

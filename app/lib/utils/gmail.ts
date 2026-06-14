@@ -1,22 +1,5 @@
-export interface GmailMessagePart {
-  mimeType?: string;
-  body?: { data?: string };
-  parts?: GmailMessagePart[];
-}
-
-export interface GmailMessage {
-  id?: string;
-  threadId?: string;
-  labelIds?: string[];
-  snippet?: string;
-  internalDate?: string | number;
-  draftId?: string;
-  payload?: {
-    headers?: { name: string; value: string }[];
-    body?: { data?: string };
-    parts?: GmailMessagePart[];
-  };
-}
+import { GmailMessage, GmailMessagePart } from "@/app/lib/types";
+export type { GmailMessage, GmailMessagePart };
 
 export const decodeBase64 = (str: string) => {
   try {

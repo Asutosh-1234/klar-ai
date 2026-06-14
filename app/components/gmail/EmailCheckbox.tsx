@@ -1,9 +1,6 @@
 'use client'
 
-interface EmailCheckboxProps {
-  checked?: boolean;
-  onChange?: (checked: boolean) => void;
-}
+import { EmailCheckboxProps } from "@/app/lib/types";
 
 export function EmailCheckbox({ checked, onChange }: EmailCheckboxProps) {
   return (

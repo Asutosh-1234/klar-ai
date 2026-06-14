@@ -1,16 +1,7 @@
 import Image from "next/image";
 import { SignOutButton } from "@/app/components/SignOutButton";
 
-interface User {
-  name?: string | null;
-  email?: string | null;
-  image?: string | null;
-}
-
-interface ConnectHeaderProps {
-  user: User;
-  isGmailConnected: boolean;
-}
+import { ConnectHeaderProps } from "@/app/lib/types";
 
 export function ConnectHeader({ user, isGmailConnected }: ConnectHeaderProps) {
   return (

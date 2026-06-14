@@ -1,9 +1,6 @@
 'use client'
 
-interface EmailStarProps {
-  isStarred: boolean;
-  onToggle?: () => void;
-}
+import { EmailStarProps } from "@/app/lib/types";
 
 export function EmailStar({ isStarred, onToggle }: EmailStarProps) {
   return (

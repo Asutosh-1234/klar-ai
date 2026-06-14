@@ -1,12 +1,6 @@
 'use client'
 
-interface EmailRowActionsProps {
-  isUnread: boolean;
-  onArchive: () => void;
-  onDelete: () => void;
-  onToggleRead: () => void;
-  className?: string;
-}
+import { EmailRowActionsProps } from "@/app/lib/types";
 
 export function EmailRowActions({
   isUnread,

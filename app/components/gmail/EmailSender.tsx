@@ -1,10 +1,6 @@
 'use client'
 
-interface EmailSenderProps {
-  name: string;
-  isUnread: boolean;
-  className?: string;
-}
+import { EmailSenderProps } from "@/app/lib/types";
 
 export function EmailSender({ name, isUnread, className = "" }: EmailSenderProps) {
   return (

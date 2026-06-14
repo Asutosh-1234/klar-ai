@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { GmailMessage } from "@/app/lib/utils/gmail";
+import { GmailMessage } from "@/app/lib/types";
 
 export function useGmailInbox() {
   const [messages, setMessages] = useState<GmailMessage[]>([]);

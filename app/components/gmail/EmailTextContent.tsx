@@ -1,11 +1,6 @@
 'use client'
 
-interface EmailTextContentProps {
-  subject: string;
-  snippet: string;
-  isUnread: boolean;
-  className?: string;
-}
+import { EmailTextContentProps } from "@/app/lib/types";
 
 export function EmailTextContent({ subject, snippet, isUnread, className = "" }: EmailTextContentProps) {
   return (

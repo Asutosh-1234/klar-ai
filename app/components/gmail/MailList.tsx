@@ -1,26 +1,14 @@
 'use client'
 
-import { GmailMessage, getHeader, getSenderName, formatDate } from "@/app/lib/utils/gmail";
+import { getHeader, getSenderName, formatDate } from "@/app/lib/utils/gmail";
+import { GmailMessage, MailListProps } from "@/app/lib/types";
 import { EmailCheckbox } from "./EmailCheckbox";
 import { EmailStar } from "./EmailStar";
 import { EmailSender } from "./EmailSender";
 import { EmailTextContent } from "./EmailTextContent";
 import { EmailRowActions } from "./EmailRowActions";
 
-interface MailListProps {
-  messages: GmailMessage[];
-  loading: boolean;
-  error: string | null;
-  selectedMessage: GmailMessage | null;
-  onSelectMessage: (msg: GmailMessage | null) => void;
-  selectedFolder: string;
-  selectedCategory: string;
-  setSelectedCategory: (cat: string) => void;
-  archiveMessage: (id: string) => void;
-  deleteMessage: (id: string) => void;
-  toggleReadStatus: (id: string, currentlyUnread: boolean) => void;
-  isSplitView: boolean;
-}
+
 
 export function MailList({
   messages,

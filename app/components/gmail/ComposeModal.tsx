@@ -1,18 +1,6 @@
 'use client'
 
-interface ComposeModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  composeTo: string;
-  setComposeTo: (to: string) => void;
-  composeSubject: string;
-  setComposeSubject: (subject: string) => void;
-  composeBody: string;
-  setComposeBody: (body: string) => void;
-  validationErrors: { to?: string[]; body?: string[] };
-  isSavingDraft: boolean;
-  onSubmit: (e: React.FormEvent) => void;
-}
+import { ComposeModalProps } from "@/app/lib/types";
 
 export function ComposeModal({
   isOpen,
