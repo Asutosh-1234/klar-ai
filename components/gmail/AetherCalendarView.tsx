@@ -1,16 +1,46 @@
 'use client'
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
+
+interface GoogleEvent {
+  id: string;
+  summary?: string;
+  description?: string;
+  location?: string;
+  start?: {
+    date?: string;
+    dateTime?: string;
+    timeZone?: string;
+  };
+  end?: {
+    date?: string;
+    dateTime?: string;
+    timeZone?: string;
+  };
+  attendees?: {
+    email: string;
+    displayName?: string;
+  }[];
+}
 
 export function AetherCalendarView() {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [events, setEvents] = useState<GoogleEvent[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    // Auto scroll to 9:30 AM area (~600px) on load for a better initial view
-    if (scrollContainerRef.current) {
-      scrollContainerRef.current.scrollTop = 530;
-    }
-  }, []);
+  // Modal State for creating an event
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [summary, setSummary] = useState('');
+  const [description, setDescription] = useState('');
+  const [eventDate, setEventDate] = useState(() => {
+    // Default to tomorrow's date
+    const tom = new Date();
+    tom.setDate(tom.getDate() + 1);
+    return tom.toISOString().split('T')[0];
+  });
+  const [startTime, setStartTime] = useState('10:00');
+  const [endTime, setEndTime] = useState('11:00');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const hours = [
     '1 AM', '2 AM', '3 AM', '4 AM', '5 AM', '6 AM', '7 AM', '8 AM',
@@ -18,15 +48,131 @@ export function AetherCalendarView() {
     '5 PM', '6 PM', '7 PM', '8 PM', '9 PM', '10 PM', '11 PM'
   ];
 
+  // Align dates with Mon 12 - Sun 18 (June 2026 week from Stitch screens)
   const days = [
-    { name: 'Mon', date: 12, isToday: false },
-    { name: 'Tue', date: 13, isToday: true },
-    { name: 'Wed', date: 14, isToday: false },
-    { name: 'Thu', date: 15, isToday: false },
-    { name: 'Fri', date: 16, isToday: false },
-    { name: 'Sat', date: 17, isToday: false },
-    { name: 'Sun', date: 18, isToday: false },
+    { name: 'Mon', date: 12, isToday: false, dateObj: new Date('2026-06-15') },
+    { name: 'Tue', date: 13, isToday: true, dateObj: new Date('2026-06-16') },
+    { name: 'Wed', date: 14, isToday: false, dateObj: new Date('2026-06-17') },
+    { name: 'Thu', date: 15, isToday: false, dateObj: new Date('2026-06-18') },
+    { name: 'Fri', date: 16, isToday: false, dateObj: new Date('2026-06-19') },
+    { name: 'Sat', date: 17, isToday: false, dateObj: new Date('2026-06-20') },
+    { name: 'Sun', date: 18, isToday: false, dateObj: new Date('2026-06-21') },
   ];
+
+  const fetchCalendarEvents = async () => {
+    try {
+      const res = await fetch('/api/calendar');
+      if (res.ok) {
+        const data = await res.json();
+        setEvents(data.events || []);
+      }
+    } catch (err) {
+      console.error('Failed to fetch calendar events:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchCalendarEvents();
+
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTop = 530;
+    }
+  }, []);
+
+  const handleCreateEvent = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!summary) return;
+
+    setIsSubmitting(true);
+    try {
+      const startDateTime = new Date(`${eventDate}T${startTime}:00`).toISOString();
+      const endDateTime = new Date(`${eventDate}T${endTime}:00`).toISOString();
+
+      const res = await fetch('/api/calendar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          event: {
+            summary,
+            description,
+            start: { dateTime: startDateTime },
+            end: { dateTime: endDateTime }
+          }
+        })
+      });
+
+      if (res.ok) {
+        setSummary('');
+        setDescription('');
+        setIsModalOpen(false);
+        fetchCalendarEvents();
+      }
+    } catch (err) {
+      console.error('Failed to create event:', err);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDeleteEvent = async (eventId: string) => {
+    if (!confirm('Are you sure you want to delete this event?')) return;
+    try {
+      const res = await fetch(`/api/calendar?id=${eventId}`, {
+        method: 'DELETE'
+      });
+      if (res.ok) {
+        fetchCalendarEvents();
+      }
+    } catch (err) {
+      console.error('Failed to delete event:', err);
+    }
+  };
+
+  // Helper to map event to column (Mon = 0, ..., Sun = 6) and position offsets
+  const getPositionForEvent = (event: GoogleEvent) => {
+    const startStr = event.start?.dateTime || event.start?.date;
+    const endStr = event.end?.dateTime || event.end?.date;
+    if (!startStr || !endStr) return null;
+
+    const startDate = new Date(startStr);
+    const endDate = new Date(endStr);
+
+    // Limit events to the displayed week (June 15 - June 21, 2026)
+    const weekStart = new Date('2026-06-15T00:00:00');
+    const weekEnd = new Date('2026-06-21T23:59:59');
+    if (startDate < weekStart || startDate > weekEnd) {
+      return null;
+    }
+
+    // Get Day index (Mon = 0, ..., Sun = 6)
+    // Javascript getDay() Sun=0, Mon=1...
+    const day = startDate.getDay();
+    const dayIndex = day === 0 ? 6 : day - 1;
+
+    // Start hour and minute
+    const startHour = startDate.getHours();
+    const startMinute = startDate.getMinutes();
+
+    // Since our list starts at 1 AM (index 0)
+    const hourIndex = startHour - 1;
+    const topPx = (hourIndex + startMinute / 60) * 64;
+
+    // Duration
+    const durationMs = endDate.getTime() - startDate.getTime();
+    const durationHours = durationMs / (1000 * 60 * 60);
+    const heightPx = Math.max(durationHours * 64, 32);
+
+    return {
+      left: `${dayIndex * 14.28 + 0.5}%`,
+      top: `${topPx}px`,
+      width: `${14.28 - 1}%`,
+      height: `${heightPx}px`,
+    };
+  };
+
+  const activeEvents = events;
 
   return (
     <div className="flex-1 flex overflow-hidden h-full bg-surface-container-lowest text-on-surface">
@@ -81,7 +227,7 @@ export function AetherCalendarView() {
               {Array.from({ length: 6 }).map((_, i) => (
                 <div key={i} className="border-r border-white/5 h-full"></div>
               ))}
-              <div></div> {/* Last column without right border */}
+              <div></div>
 
               {/* Horizontal Hour Gridlines */}
               <div className="absolute inset-0 pointer-events-none">
@@ -90,39 +236,65 @@ export function AetherCalendarView() {
                 ))}
               </div>
 
-              {/* Event Cards (Absolute Positioned Mocks) */}
-              
-              {/* Event 1: Board Alignment - Tuesday (Col 2) 9:30 AM - 11:00 AM */}
-              {/* Top: 9.5 hours * 64px = 608px. Height: 1.5 hours * 64px = 96px */}
-              <div 
-                className="absolute left-[calc(14.28%+4px)] top-[544px] w-[calc(14.28%-8px)] h-[96px] z-10 bg-surface-container-high/80 backdrop-blur-md border border-primary/20 border-l-4 border-l-primary rounded-lg p-2.5 shadow-lg flex flex-col justify-between hover:translate-y-[-2px] transition-transform duration-200 cursor-pointer"
-                title="Board Alignment"
-              >
-                <div>
-                  <h4 className="font-semibold text-[11px] text-primary truncate leading-tight">Board Alignment</h4>
-                  <p className="text-[9px] text-on-surface-variant mt-0.5">09:30 - 11:00</p>
-                </div>
-                <div className="flex items-center -space-x-1.5 mt-1 overflow-hidden">
-                  <div className="w-4 h-4 rounded-full border border-surface-container-high bg-zinc-500 text-[8px] flex items-center justify-center font-bold">MV</div>
-                  <div className="w-4 h-4 rounded-full border border-surface-container-high bg-primary/40 text-[8px] flex items-center justify-center font-bold text-white">AV</div>
-                </div>
-              </div>
+              {/* Render Calendar Events */}
+              {activeEvents.map((evt) => {
+                const pos = getPositionForEvent(evt);
+                if (!pos) return null;
 
-              {/* Event 2: Deep Focus Session - Wednesday (Col 3) 11:00 AM - 1:00 PM */}
-              {/* Top: 11 hours * 64px = 704px. Height: 2 hours * 64px = 128px */}
-              <div 
-                className="absolute left-[calc(28.56%+4px)] top-[640px] w-[calc(14.28%-8px)] h-[128px] z-10 bg-surface-container-high/80 backdrop-blur-md border border-emerald-500/20 border-l-4 border-l-emerald-500 rounded-lg p-2.5 shadow-lg flex flex-col justify-between hover:translate-y-[-2px] transition-transform duration-200 cursor-pointer"
-                title="Deep Focus Session"
-              >
-                <div>
-                  <h4 className="font-semibold text-[11px] text-white truncate leading-tight">Deep Focus Session</h4>
-                  <p className="text-[9px] text-on-surface-variant mt-0.5">11:00 - 13:00</p>
-                </div>
-                <span className="material-symbols-outlined text-emerald-500 text-xs self-end opacity-60">lock</span>
-              </div>
+                const isBoard = evt.summary?.toLowerCase().includes('board');
+                
+                return (
+                  <div 
+                    key={evt.id} 
+                    style={pos}
+                    className={`absolute z-10 bg-surface-container-high/80 backdrop-blur-md border rounded-lg p-2.5 shadow-lg flex flex-col justify-between hover:translate-y-[-2px] transition-transform duration-200 group/evt cursor-pointer ${
+                      isBoard
+                        ? 'border-primary/20 border-l-4 border-l-primary'
+                        : 'border-emerald-500/20 border-l-4 border-l-emerald-500'
+                    }`}
+                    title={`${evt.summary}: ${evt.description || ''}`}
+                  >
+                    <div>
+                      <div className="flex justify-between items-start gap-1">
+                        <h4 className={`font-semibold text-[11px] truncate leading-tight ${
+                          isBoard ? 'text-primary' : 'text-white'
+                        }`}>
+                          {evt.summary || 'No Title'}
+                        </h4>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteEvent(evt.id);
+                          }}
+                          className="text-on-surface-variant hover:text-error opacity-0 group-hover/evt:opacity-100 transition-opacity p-0.5"
+                        >
+                          <span className="material-symbols-outlined text-[10px]">delete</span>
+                        </button>
+                      </div>
+                      {evt.description && (
+                        <p className="text-[9px] text-on-surface-variant/70 truncate mt-0.5">{evt.description}</p>
+                      )}
+                    </div>
+                    
+                    <div className="flex justify-between items-center mt-1">
+                      <span className="text-[9px] text-on-surface-variant font-mono">
+                        {evt.start?.dateTime 
+                          ? new Date(evt.start.dateTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })
+                          : 'All Day'
+                        }
+                      </span>
+                      {isBoard && (
+                        <div className="flex items-center -space-x-1 mt-1 overflow-hidden shrink-0">
+                          <div className="w-3.5 h-3.5 rounded-full border border-surface-container-high bg-zinc-500 text-[6px] flex items-center justify-center font-bold">MV</div>
+                          <div className="w-3.5 h-3.5 rounded-full border border-surface-container-high bg-primary/40 text-[6px] flex items-center justify-center font-bold text-white">AV</div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
 
-              {/* Current Time Indicator (Red line) - Tuesday 10:45 AM (Col 2) */}
-              {/* Top: 10.75 hours * 64px = 688px */}
+              {/* Current Time Indicator (Red line) - Tuesday 10:45 AM */}
               <div className="absolute left-0 right-0 top-[624px] flex items-center z-20 pointer-events-none">
                 <div className="w-2.5 h-2.5 rounded-full bg-error ml-[-5px] shadow-[0_0_8px_rgba(255,180,171,0.8)]"></div>
                 <div className="h-0.5 flex-1 bg-error/50"></div>
@@ -156,24 +328,27 @@ export function AetherCalendarView() {
           </div>
         </div>
 
-        {/* Priority Meetings list */}
+        {/* Priority Meetings list from Google Calendar */}
         <div className="flex flex-col gap-4">
           <h3 className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest opacity-40">Priority Meetings</h3>
           <div className="space-y-4">
-            <div className="flex gap-3">
-              <div className="w-1 h-10 bg-primary rounded-full shrink-0"></div>
-              <div>
-                <p className="text-xs font-semibold text-white leading-tight">Series D Funding Recap</p>
-                <p className="text-[10px] text-on-surface-variant opacity-60 mt-0.5">2:00 PM - 3:30 PM</p>
-              </div>
-            </div>
-            <div className="flex gap-3 opacity-60">
-              <div className="w-1 h-10 bg-white/20 rounded-full shrink-0"></div>
-              <div>
-                <p className="text-xs font-semibold text-white leading-tight">Weekly Stand-up</p>
-                <p className="text-[10px] text-on-surface-variant opacity-60 mt-0.5">4:00 PM - 4:15 PM</p>
-              </div>
-            </div>
+            {activeEvents.slice(0, 3).map((evt) => {
+              const startStr = evt.start?.dateTime;
+              let timeLabel = 'All Day';
+              if (startStr) {
+                timeLabel = new Date(startStr).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+              }
+              const isBoard = evt.summary?.toLowerCase().includes('board');
+              return (
+                <div key={evt.id} className="flex gap-3">
+                  <div className={`w-1 h-10 rounded-full shrink-0 ${isBoard ? 'bg-primary' : 'bg-emerald-500'}`}></div>
+                  <div>
+                    <p className="text-xs font-semibold text-white leading-tight truncate max-w-section-gap">{evt.summary || 'Untitled Event'}</p>
+                    <p className="text-[10px] text-on-surface-variant opacity-60 mt-0.5">{timeLabel}</p>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
 
@@ -193,6 +368,105 @@ export function AetherCalendarView() {
         </div>
 
       </aside>
+
+      {/* Floating Action Button for Schedule creation */}
+      <button 
+        onClick={() => setIsModalOpen(true)}
+        className="fixed bottom-6 right-6 w-14 h-14 bg-primary text-on-primary rounded-full shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-transform gold-glow z-50 cursor-pointer"
+      >
+        <span className="material-symbols-outlined text-[28px]">add</span>
+      </button>
+
+      {/* Event Creation Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-surface-container border border-primary/20 rounded-xl max-w-sm w-full p-6 shadow-2xl animate-fadeIn">
+            <div className="flex justify-between items-center mb-4 border-b border-white/5 pb-2">
+              <h3 className="text-sm font-semibold text-white">Create Calendar Event</h3>
+              <button 
+                onClick={() => setIsModalOpen(false)} 
+                className="text-on-surface-variant hover:text-white cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-lg">close</span>
+              </button>
+            </div>
+            
+            <form onSubmit={handleCreateEvent} className="space-y-4">
+              <div>
+                <label className="block text-[10px] font-semibold text-on-surface-variant uppercase tracking-wider mb-1">Event Title</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Board Alignment"
+                  value={summary}
+                  onChange={(e) => setSummary(e.target.value)}
+                  className="w-full bg-surface-container-lowest border border-white/10 rounded px-3 py-1.5 text-xs text-white focus:outline-none focus:border-primary"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-semibold text-on-surface-variant uppercase tracking-wider mb-1">Description</label>
+                <textarea
+                  placeholder="Details of the event..."
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  className="w-full bg-surface-container-lowest border border-white/10 rounded px-3 py-1.5 text-xs text-white focus:outline-none focus:border-primary h-16 resize-none"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[10px] font-semibold text-on-surface-variant uppercase tracking-wider mb-1">Date</label>
+                  <input
+                    type="date"
+                    required
+                    value={eventDate}
+                    onChange={(e) => setEventDate(e.target.value)}
+                    className="w-full bg-surface-container-lowest border border-white/10 rounded px-3 py-1.5 text-xs text-white focus:outline-none focus:border-primary"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-semibold text-on-surface-variant uppercase tracking-wider mb-1">Time (Start - End)</label>
+                  <div className="flex items-center gap-1">
+                    <input
+                      type="time"
+                      required
+                      value={startTime}
+                      onChange={(e) => setStartTime(e.target.value)}
+                      className="w-full bg-surface-container-lowest border border-white/10 rounded px-1.5 py-1.5 text-xs text-white focus:outline-none focus:border-primary"
+                    />
+                    <span className="text-[10px] opacity-40">-</span>
+                    <input
+                      type="time"
+                      required
+                      value={endTime}
+                      onChange={(e) => setEndTime(e.target.value)}
+                      className="w-full bg-surface-container-lowest border border-white/10 rounded px-1.5 py-1.5 text-xs text-white focus:outline-none focus:border-primary"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-2">
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full py-2 bg-primary hover:brightness-110 text-on-primary rounded font-bold text-xs active:scale-[0.98] transition-all cursor-pointer flex justify-center items-center gap-2"
+                >
+                  {isSubmitting ? (
+                    <span>Creating...</span>
+                  ) : (
+                    <>
+                      <span className="material-symbols-outlined text-xs">add</span>
+                      <span>Schedule Event</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
