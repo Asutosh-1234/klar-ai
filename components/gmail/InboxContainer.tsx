@@ -1,5 +1,6 @@
 'use client'
 
+import { useState, useEffect, useRef } from "react";
 import { useGmailInbox } from "@/lib/hooks/gmail/useGmailInbox";
 import { useGmailDrafts } from "@/lib/hooks/gmail/useGmailDrafts";
 import { InboxSidebar } from "./InboxSidebar";
@@ -11,6 +12,7 @@ import { AetherCalendarView } from "./AetherCalendarView";
 import { AetherPurchasesView } from "./AetherPurchasesView";
 import { AetherAgentsView } from "./AetherAgentsView";
 import { AetherSettingsView } from "./AetherSettingsView";
+import { ShortcutsHelpModal } from "./ShortcutsHelpModal";
 
 import { UserProfile, InboxContainerProps } from "@/lib/types";
 
@@ -64,6 +66,162 @@ export function InboxContainer({ user }: InboxContainerProps) {
   });
 
   const isSplitView = !!selectedMessage;
+
+  const [isHelpOpen, setIsHelpOpen] = useState(false);
+  const lastKeyPressedRef = useRef<string | null>(null);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement;
+      if (
+        target.tagName === "INPUT" ||
+        target.tagName === "TEXTAREA" ||
+        target.isContentEditable
+      ) {
+        return;
+      }
+
+      const key = e.key.toLowerCase();
+
+      // 1. Direct Ctrl + key combination (simultaneous)
+      if (e.ctrlKey && !e.altKey && !e.metaKey) {
+        let matched = true;
+        switch (key) {
+          case "i":
+            setSelectedFolder("INBOX");
+            setSelectedMessage(null);
+            break;
+          case "s":
+            setSelectedFolder("STARRED");
+            setSelectedMessage(null);
+            break;
+          case "e":
+            setSelectedFolder("SENT");
+            setSelectedMessage(null);
+            break;
+          case "d":
+            setSelectedFolder("DRAFT");
+            setSelectedMessage(null);
+            break;
+          case "p":
+            setSelectedFolder("PURCHASES");
+            setSelectedMessage(null);
+            break;
+          case "c":
+            setSelectedFolder("CALENDAR");
+            setSelectedMessage(null);
+            break;
+          case "a":
+            setSelectedFolder("AGENTS");
+            setSelectedMessage(null);
+            break;
+          case "o":
+            setSelectedFolder("SETTINGS");
+            setSelectedMessage(null);
+            break;
+          default:
+            matched = false;
+            break;
+        }
+        if (matched) {
+          e.preventDefault();
+          return;
+        }
+      }
+
+      // 2. Sequential key navigation (using lastKeyPressedRef)
+      if (lastKeyPressedRef.current === "g" || lastKeyPressedRef.current === "control") {
+        let matched = true;
+        switch (key) {
+          case "i":
+            setSelectedFolder("INBOX");
+            setSelectedMessage(null);
+            break;
+          case "s":
+            setSelectedFolder("STARRED");
+            setSelectedMessage(null);
+            break;
+          case "e":
+            setSelectedFolder("SENT");
+            setSelectedMessage(null);
+            break;
+          case "d":
+            setSelectedFolder("DRAFT");
+            setSelectedMessage(null);
+            break;
+          case "p":
+            setSelectedFolder("PURCHASES");
+            setSelectedMessage(null);
+            break;
+          case "c":
+            setSelectedFolder("CALENDAR");
+            setSelectedMessage(null);
+            break;
+          case "a":
+            setSelectedFolder("AGENTS");
+            setSelectedMessage(null);
+            break;
+          case "o":
+            setSelectedFolder("SETTINGS");
+            setSelectedMessage(null);
+            break;
+          default:
+            matched = false;
+            break;
+        }
+        if (matched) {
+          e.preventDefault();
+        }
+        lastKeyPressedRef.current = null;
+        if (timeoutRef.current) clearTimeout(timeoutRef.current);
+        return;
+      }
+
+      // 3. Single key action shortcuts
+      if (key === "c") {
+        e.preventDefault();
+        openCompose();
+        return;
+      }
+
+      if (key === "?" || key === "h") {
+        e.preventDefault();
+        setIsHelpOpen((prev) => !prev);
+        return;
+      }
+
+      if (e.key === "Escape") {
+        if (isHelpOpen) {
+          setIsHelpOpen(false);
+          return;
+        }
+        if (isComposeOpen) {
+          setIsComposeOpen(false);
+          return;
+        }
+        if (selectedMessage) {
+          setSelectedMessage(null);
+          return;
+        }
+      }
+
+      // Track sequence initiator keys
+      if (key === "g" || key === "control") {
+        lastKeyPressedRef.current = key;
+        if (timeoutRef.current) clearTimeout(timeoutRef.current);
+        timeoutRef.current = setTimeout(() => {
+          lastKeyPressedRef.current = null;
+        }, 1500);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
+  }, [openCompose, isHelpOpen, isComposeOpen, selectedMessage, setSelectedFolder, setSelectedMessage]);
 
   const onSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -159,8 +317,21 @@ export function InboxContainer({ user }: InboxContainerProps) {
                 </button>
               </div>
             )}
-            <button className="hover:text-primary transition-colors material-symbols-outlined cursor-pointer">settings</button>
-            <button className="hover:text-primary transition-colors material-symbols-outlined cursor-pointer">help</button>
+            <button 
+              onClick={() => {
+                setSelectedFolder("SETTINGS");
+                setSelectedMessage(null);
+              }}
+              className="hover:text-primary transition-colors material-symbols-outlined cursor-pointer"
+            >
+              settings
+            </button>
+            <button 
+              onClick={() => setIsHelpOpen(true)}
+              className="hover:text-primary transition-colors material-symbols-outlined cursor-pointer"
+            >
+              help
+            </button>
           </div>
         </header>
 
@@ -228,6 +399,9 @@ export function InboxContainer({ user }: InboxContainerProps) {
         onSubmit={handleSaveDraft}
         onSendCompose={handleSendCompose}
       />
+
+      {/* Keyboard Shortcuts Help Modal */}
+      <ShortcutsHelpModal isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />
 
     </div>
   );

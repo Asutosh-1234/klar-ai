@@ -124,3 +124,18 @@ export interface EmailTextContentProps {
   isUnread: boolean;
   className?: string;
 }
+
+export interface ShortcutsHelpModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+export interface ShortcutRowProps {
+  label: string;
+  children: React.ReactNode;
+}
+
+export interface KeyBadgeProps {
+  children: React.ReactNode;
+  size?: 'sm' | 'md';
+}
