@@ -48,16 +48,32 @@ export function AetherCalendarView() {
     '5 PM', '6 PM', '7 PM', '8 PM', '9 PM', '10 PM', '11 PM'
   ];
 
-  // Align dates with Mon 12 - Sun 18 (June 2026 week from Stitch screens)
-  const days = [
-    { name: 'Mon', date: 12, isToday: false, dateObj: new Date('2026-06-15') },
-    { name: 'Tue', date: 13, isToday: true, dateObj: new Date('2026-06-16') },
-    { name: 'Wed', date: 14, isToday: false, dateObj: new Date('2026-06-17') },
-    { name: 'Thu', date: 15, isToday: false, dateObj: new Date('2026-06-18') },
-    { name: 'Fri', date: 16, isToday: false, dateObj: new Date('2026-06-19') },
-    { name: 'Sat', date: 17, isToday: false, dateObj: new Date('2026-06-20') },
-    { name: 'Sun', date: 18, isToday: false, dateObj: new Date('2026-06-21') },
-  ];
+  const [currentDate] = useState(() => new Date());
+  const [now, setNow] = useState(() => new Date());
+
+  // Real-time ticking for time indicator
+  useEffect(() => {
+    const timer = setInterval(() => setNow(new Date()), 60000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const getStartOfWeek = (d: Date) => {
+    const day = d.getDay();
+    const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+    return new Date(d.setDate(diff));
+  };
+
+  const days = Array.from({ length: 7 }).map((_, idx) => {
+    const d = getStartOfWeek(new Date(currentDate));
+    d.setDate(d.getDate() + idx);
+    const isToday = d.toDateString() === new Date().toDateString();
+    return {
+      name: d.toLocaleDateString('en-US', { weekday: 'short' }),
+      date: d.getDate(),
+      isToday,
+      dateObj: d,
+    };
+  });
 
   const fetchCalendarEvents = async () => {
     try {
@@ -139,9 +155,11 @@ export function AetherCalendarView() {
     const startDate = new Date(startStr);
     const endDate = new Date(endStr);
 
-    // Limit events to the displayed week (June 15 - June 21, 2026)
-    const weekStart = new Date('2026-06-15T00:00:00');
-    const weekEnd = new Date('2026-06-21T23:59:59');
+    // Limit events to the displayed week
+    const weekStart = new Date(days[0].dateObj);
+    weekStart.setHours(0, 0, 0, 0);
+    const weekEnd = new Date(days[6].dateObj);
+    weekEnd.setHours(23, 59, 59, 999);
     if (startDate < weekStart || startDate > weekEnd) {
       return null;
     }
@@ -294,11 +312,29 @@ export function AetherCalendarView() {
                 );
               })}
 
-              {/* Current Time Indicator (Red line) - Tuesday 10:45 AM */}
-              <div className="absolute left-0 right-0 top-[624px] flex items-center z-20 pointer-events-none">
-                <div className="w-2.5 h-2.5 rounded-full bg-error ml-[-5px] shadow-[0_0_8px_rgba(255,180,171,0.8)]"></div>
-                <div className="h-0.5 flex-1 bg-error/50"></div>
-              </div>
+              {/* Dynamic Current Time Indicator */}
+              {(() => {
+                const todayIndex = days.findIndex(d => d.isToday);
+                if (todayIndex === -1) return null;
+
+                const startHour = now.getHours();
+                const startMinute = now.getMinutes();
+
+                if (startHour < 1 || startHour > 23) return null;
+
+                const hourIndex = startHour - 1;
+                const topPx = (hourIndex + startMinute / 60) * 64;
+
+                return (
+                  <div 
+                    style={{ top: `${topPx}px` }}
+                    className="absolute left-0 right-0 flex items-center z-20 pointer-events-none"
+                  >
+                    <div className="w-2.5 h-2.5 rounded-full bg-error ml-[-5px] shadow-[0_0_8px_rgba(255,180,171,0.8)]"></div>
+                    <div className="h-0.5 flex-1 bg-error/50"></div>
+                  </div>
+                );
+              })()}
 
             </div>
           </div>
@@ -320,11 +356,19 @@ export function AetherCalendarView() {
               <span className="text-[9px] font-bold text-primary uppercase tracking-widest">AI Insight</span>
             </div>
             <p className="text-xs text-on-surface-variant leading-relaxed">
-              Detected heavy cognitive load this afternoon. Suggest moving <span className="text-primary font-medium">&ldquo;Project Nexus&rdquo;</span> to tomorrow at 09:00 for optimal flow.
+              {events.length === 0 ? (
+                "Your calendar is currently empty. Add events to receive cognitive flow optimizations."
+              ) : (
+                <>
+                  Detected high cognitive load. Suggest optimizing calendar schedules for optimal focus.
+                </>
+              )}
             </p>
-            <button className="mt-3.5 text-primary text-[10px] font-bold hover:underline cursor-pointer tracking-wider uppercase">
-              Apply Optimization
-            </button>
+            {events.length > 0 && (
+              <button className="mt-3.5 text-primary text-[10px] font-bold hover:underline cursor-pointer tracking-wider uppercase">
+                Apply Optimization
+              </button>
+            )}
           </div>
         </div>
 
