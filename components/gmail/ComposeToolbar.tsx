@@ -21,6 +21,8 @@ interface ComposeToolbarProps {
   fileInputRef: React.RefObject<HTMLInputElement | null>;
   handleFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onEmojiSelect: (emoji: string) => void;
+  showFormatting: boolean;
+  setShowFormatting: (show: boolean) => void;
 }
 
 export function ComposeToolbar({
@@ -31,6 +33,8 @@ export function ComposeToolbar({
   fileInputRef,
   handleFileChange,
   onEmojiSelect,
+  showFormatting,
+  setShowFormatting,
 }: ComposeToolbarProps) {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
@@ -65,7 +69,10 @@ export function ComposeToolbar({
         {/* Formatting */}
         <button
           type="button"
-          className="w-8 h-8 rounded-full flex items-center justify-center text-on-surface-variant hover:text-white hover:bg-white/5 transition-all cursor-pointer"
+          onClick={() => setShowFormatting(!showFormatting)}
+          className={`w-8 h-8 rounded-full flex items-center justify-center transition-all cursor-pointer ${
+            showFormatting ? 'text-primary bg-white/5' : 'text-on-surface-variant hover:text-white hover:bg-white/5'
+          }`}
           title="Formatting options"
         >
           <span className="material-symbols-outlined text-lg">text_format</span>
