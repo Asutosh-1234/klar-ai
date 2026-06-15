@@ -4,7 +4,8 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/config/prisma";
 import Image from "next/image";
 import { SignOutButton } from "@/components/SignOutButton";
-import { InboxContainer } from "@/components/gmail/InboxContainer";
+import { InboxContainer } from "@/components/workspace/InboxContainer";
+import Link from "next/link";
 
 
 export default async function GmailPage() {
@@ -56,10 +57,10 @@ export default async function GmailPage() {
       <header className="relative z-10 border-b border-white/4 bg-surface-sidebar/80 backdrop-blur-xl">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <a href="/connect" className="text-on-surface-variant hover:text-white transition-colors duration-200 flex items-center gap-1 text-xs">
+            <Link href="/connect" className="text-on-surface-variant hover:text-white transition-colors duration-200 flex items-center gap-1 text-xs">
               <span className="material-symbols-outlined text-sm">arrow_back</span>
               <span className="font-medium">Dashboard</span>
-            </a>
+            </Link>
             <span className="text-white/10 text-xs">|</span>
             <div className="text-sm font-semibold tracking-tight text-gradient">
               Klar Inbox
@@ -99,12 +100,12 @@ export default async function GmailPage() {
             <p className="text-on-surface-variant text-xs mb-6 leading-relaxed max-w-xs">
               Connect your Google Account to authorize Klar AI to fetch, analyze, and help manage your emails using natural language.
             </p>
-            <a
+            <Link
               href="/connect"
               className="px-6 py-2.5 rounded-lg bg-primary hover:bg-primary-hover text-white text-xs font-semibold hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 shadow-[0_4px_12px_rgba(139,92,246,0.2)] flex items-center gap-1.5"
             >
               Connect Gmail <span className="material-symbols-outlined text-xs">arrow_forward</span>
-            </a>
+            </Link>
           </div>
         </div>
       </main>

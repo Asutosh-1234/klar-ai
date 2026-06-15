@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link';
 import { signOut } from 'next-auth/react';
 import { InboxSidebarProps } from '@/lib/types';
 
@@ -69,7 +70,7 @@ export function InboxSidebar({
         <div className="px-6 my-4 border-t border-white/5"></div>
 
         {/* Back to Connect Dashboard */}
-        <a
+        <Link
           href="/connect"
           className="flex items-center px-6 py-3 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-highest transition-colors duration-200 text-xs group"
         >
@@ -77,7 +78,7 @@ export function InboxSidebar({
             arrow_back
           </span>
           <span className="font-label-md text-xs">Dashboard</span>
-        </a>
+        </Link>
 
         {/* Sync Mail Action */}
         <button

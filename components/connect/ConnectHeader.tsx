@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { SignOutButton } from "@/components/SignOutButton";
+import Link from "next/link";
 
 import { ConnectHeaderProps } from "@/lib/types";
 
@@ -12,13 +13,13 @@ export function ConnectHeader({ user, isGmailConnected }: ConnectHeaderProps) {
             Klar AI
           </div>
           {isGmailConnected && (
-            <a
-              href="/gmail"
+            <Link
+              href="/index"
               className="hidden sm:flex items-center gap-1.5 text-xs text-on-surface-variant hover:text-white transition-colors duration-200"
             >
               <span className="material-symbols-outlined text-sm">mail</span>
               Gmail Inbox
-            </a>
+            </Link>
           )}
         </div>
         <div className="flex items-center gap-3">

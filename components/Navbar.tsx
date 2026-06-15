@@ -1,6 +1,7 @@
 'use client'
 import { signIn } from 'next-auth/react'
 import { Button, buttonVariants } from "@/components/ui/button"
+import Link from 'next/link'
 
 import { NavbarProps } from "@/lib/types";
 
@@ -24,14 +25,14 @@ export function Navbar({ session }: NavbarProps) {
           <a className="text-on-surface-variant hover:text-primary transition-colors duration-200" href="#pricing">Pricing</a>
           {isLoggedIn && (
             <>
-              <a className="text-on-surface-variant hover:text-primary transition-colors duration-200" href="/connect">Dashboard</a>
-              <a className="text-on-surface-variant hover:text-primary transition-colors duration-200 font-semibold" href="/gmail">Inbox</a>
+              <Link className="text-on-surface-variant hover:text-primary transition-colors duration-200" href="/connect">Dashboard</Link>
+              <Link className="text-on-surface-variant hover:text-primary transition-colors duration-200 font-semibold" href="/index">Inbox</Link>
             </>
           )}
         </div>
         <div className="flex gap-4 items-center">
           {isLoggedIn ? (
-            <a 
+            <Link 
               href="/connect"
               className={buttonVariants({
                 variant: "default",
@@ -39,7 +40,7 @@ export function Navbar({ session }: NavbarProps) {
               })}
             >
               Go to Dashboard
-            </a>
+            </Link>
           ) : (
             <>
               <Button 

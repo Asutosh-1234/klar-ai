@@ -1,4 +1,5 @@
 import { IntegrationCardProps } from "@/lib/types";
+import Link from "next/link";
 
 export function IntegrationCard({
   title,
@@ -61,7 +62,7 @@ export function IntegrationCard({
 
       {isConnected ? (
         connectedAction.type === "link" && connectedAction.href ? (
-          <a
+          <Link
             href={connectedAction.href}
             className="w-full py-2.5 rounded-lg bg-primary hover:bg-primary-hover text-white text-xs font-semibold text-center flex items-center justify-center gap-1.5 transition-all duration-200 hover:scale-[1.01] active:scale-[0.99] shadow-[0_4px_12px_rgba(139,92,246,0.2)]"
           >
@@ -69,7 +70,7 @@ export function IntegrationCard({
             <span className="material-symbols-outlined text-sm">
               arrow_forward
             </span>
-          </a>
+          </Link>
         ) : (
           <button
             disabled
