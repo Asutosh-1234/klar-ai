@@ -1,8 +1,7 @@
 'use client'
 
 import { signOut } from 'next-auth/react';
-
-import { UserProfile, InboxSidebarProps } from '@/lib/types';
+import { InboxSidebarProps } from '@/lib/types';
 
 export function InboxSidebar({
   user,
@@ -13,91 +12,102 @@ export function InboxSidebar({
 }: InboxSidebarProps) {
   const folders = [
     { id: "INBOX", label: "Inbox", icon: "inbox" },
+    { id: "STARRED", label: "Starred", icon: "star" },
     { id: "SENT", label: "Sent", icon: "send" },
     { id: "DRAFT", label: "Drafts", icon: "drafts" },
-    { id: "TRASH", label: "Archive", icon: "archive" },
-    { id: "SPAM", label: "Spam", icon: "report" },
+    { id: "PURCHASES", label: "Purchases", icon: "shopping_bag" },
+    { id: "CALENDAR", label: "Calendar", icon: "calendar_today" },
+    { id: "AGENTS", label: "Agents", icon: "smart_toy" },
+    { id: "SETTINGS", label: "Settings", icon: "settings" },
   ];
 
   return (
-    <aside className="w-64 shrink-0 flex flex-col h-full py-8 bg-surface-sidebar border-r border-white/5 z-50">
+    <aside className="w-64 shrink-0 flex flex-col h-full py-8 bg-surface-container border-r border-white/5 z-50">
+      
       {/* Brand Header */}
       <div className="px-6 mb-8">
-        <h1 className="font-headline-md text-xl font-bold text-white tracking-tight">Klar AI</h1>
-        <p className="text-on-surface-variant font-label-caps text-[9px] tracking-widest mt-1">INTELLIGENCE HUB</p>
+        <h1 className="font-headline-sm text-lg font-bold text-primary tracking-tight">Aether OS</h1>
+        <p className="text-[9px] font-semibold text-on-surface-variant opacity-60 tracking-wider uppercase">Premium AI Agent</p>
       </div>
 
       {/* Compose Button */}
       <div className="px-6 mb-6">
         <button
           onClick={onComposeClick}
-          className="w-full py-3 bg-primary-container text-white rounded-full font-bold flex items-center justify-center gap-2 hover:brightness-110 transition-all duration-200 active:scale-95 shadow-[0_0_30px_rgba(139,92,246,0.15)] cursor-pointer"
+          className="w-full py-3 bg-primary-container text-white rounded-lg font-semibold flex items-center justify-center gap-2 hover:brightness-110 transition-all duration-200 active:scale-95 shadow-[0_0_20px_rgba(242,202,80,0.1)] cursor-pointer"
         >
-          <span className="material-symbols-outlined text-sm font-bold">edit</span>
-          Compose
+          <span className="material-symbols-outlined text-[20px] font-semibold">add</span>
+          <span className="font-label-md text-xs">Compose</span>
         </button>
       </div>
 
       {/* Navigation Links */}
-      <nav className="flex-1 space-y-1">
+      <nav className="flex-1 space-y-1 overflow-y-auto custom-scrollbar">
         {folders.map((folder) => {
           const isActive = selectedFolder === folder.id;
           return (
             <button
               key={folder.id}
               onClick={() => setSelectedFolder(folder.id)}
-              className={`w-full flex items-center px-6 py-2.5 transition-all duration-150 text-left text-xs cursor-pointer ${
+              className={`w-full flex items-center px-6 py-3 transition-colors duration-200 text-left text-xs cursor-pointer ${
                 isActive
-                  ? "text-primary font-bold border-r-2 border-primary bg-primary/5"
-                  : "text-on-surface-variant hover:bg-white/5 hover:text-white font-normal"
+                  ? "text-on-surface font-semibold border-l-2 border-primary bg-surface-container-high"
+                  : "text-on-surface-variant hover:text-on-surface hover:bg-surface-container-highest"
               }`}
             >
-              <span className={`material-symbols-outlined mr-3 ${isActive ? "text-primary" : "text-on-surface-variant"}`}>
+              <span 
+                className={`material-symbols-outlined mr-3 text-lg ${isActive ? "text-primary" : "text-on-surface-variant"}`}
+                style={isActive ? { fontVariationSettings: "'FILL' 1" } : undefined}
+              >
                 {folder.icon}
               </span>
-              <span className="font-body-md">{folder.label}</span>
+              <span className="font-label-md text-xs">{folder.label}</span>
             </button>
           );
         })}
 
-        <hr className="border-white/5 my-4" />
+        <div className="px-6 my-4 border-t border-white/5"></div>
 
-        {/* Back to Dashboard Link */}
+        {/* Back to Connect Dashboard */}
         <a
           href="/connect"
-          className="flex items-center px-6 py-2.5 text-on-surface-variant hover:bg-white/5 hover:text-white transition-all text-xs group"
+          className="flex items-center px-6 py-3 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-highest transition-colors duration-200 text-xs group"
         >
-          <span className="material-symbols-outlined mr-3 text-on-surface-variant group-hover:text-primary">
+          <span className="material-symbols-outlined mr-3 text-lg text-on-surface-variant group-hover:text-primary">
             arrow_back
           </span>
-          <span className="font-body-md">Dashboard</span>
+          <span className="font-label-md text-xs">Dashboard</span>
         </a>
 
         {/* Sync Mail Action */}
         <button
           onClick={onSyncClick}
-          className="w-full flex items-center px-6 py-2.5 text-on-surface-variant hover:bg-white/5 hover:text-white transition-all text-xs group text-left cursor-pointer"
+          className="w-full flex items-center px-6 py-3 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-highest transition-colors duration-200 text-xs group text-left cursor-pointer"
         >
-          <span className="material-symbols-outlined mr-3 text-on-surface-variant group-hover:text-primary">
+          <span className="material-symbols-outlined mr-3 text-lg text-on-surface-variant group-hover:text-primary animate-pulse">
             refresh
           </span>
-          <span className="font-body-md">Sync Mail</span>
+          <span className="font-label-md text-xs">Sync Mail</span>
         </button>
       </nav>
 
       {/* User Profile Card Footer */}
       <div className="mt-auto px-6 flex items-center justify-between gap-2 border-t border-white/5 pt-4">
         <div className="flex items-center gap-3 min-w-0">
-          <div className="w-9 h-9 rounded-full bg-white/5 border border-white/10 overflow-hidden flex items-center justify-center shrink-0">
-            {user.image ? (
-              <img src={user.image} alt={user.name || "User"} className="w-full h-full object-cover" />
+          <div className="w-9 h-9 rounded-full bg-white/5 border border-primary/20 overflow-hidden flex items-center justify-center shrink-0">
+            {user?.image ? (
+              <img src={user.image} alt={user.name || "Executive"} className="w-full h-full object-cover" />
             ) : (
-              <span className="material-symbols-outlined text-on-surface-variant text-base">person</span>
+              <img 
+                alt="Executive Profile" 
+                className="w-full h-full object-cover" 
+                src="https://lh3.googleusercontent.com/aida-public/AB6AXuBIYwpZKiz8a8H8tGbL2-ou1o1HMEulNKClAygiW-IpcY9lCuuV2f9_B06geUA1oJUz8N4wifjuIMGdaKJxXFSNgixQ7xklW4VTlwxHwV3JyyFwxU85H_H4bOCiOsQPhkI0iSFZO-_L4Ky83LFUsaPOQqmkHsxPmUjh9jp_p07htlPQyFvu_hJgJKx8YPKD-9Mv7yrUy6LO2YZs9MEZ145JeqCGP182lLC707gMbD6IlLTSaWGc4pvl"
+              />
             )}
           </div>
           <div className="flex flex-col min-w-0">
-            <span className="text-xs font-bold text-on-surface truncate">{user.name || "User"}</span>
-            <span className="text-[10px] text-on-surface-variant uppercase tracking-tighter">Pro Plan</span>
+            <span className="text-xs font-bold text-on-surface truncate">{user?.name || "Marcus Vane"}</span>
+            <span className="text-[10px] text-on-surface-variant opacity-60 truncate">Chief Strategy Officer</span>
           </div>
         </div>
         <button
@@ -108,6 +118,7 @@ export function InboxSidebar({
           <span className="material-symbols-outlined text-lg">logout</span>
         </button>
       </div>
+
     </aside>
   );
 }

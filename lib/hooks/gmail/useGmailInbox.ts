@@ -11,6 +11,13 @@ export function useGmailInbox() {
   const [error, setError] = useState<string | null>(null);
 
   const fetchEmails = useCallback(async (query = "", label = selectedFolder, category = selectedCategory) => {
+    if (["PURCHASES", "CALENDAR", "AGENTS", "SETTINGS"].includes(label)) {
+      setLoading(false);
+      setMessages([]);
+      setSelectedMessage(null);
+      setError(null);
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
@@ -23,6 +30,8 @@ export function useGmailInbox() {
           q = `label:INBOX category:${category}`;
         } else if (label === "SENT") {
           q = "label:SENT";
+        } else if (label === "STARRED") {
+          q = "is:starred";
         } else if (label === "TRASH") {
           q = "label:TRASH";
         } else if (label === "SPAM") {

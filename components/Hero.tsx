@@ -1,5 +1,6 @@
 'use client'
 import { signIn } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -7,10 +8,27 @@ import { HeroCommandBar } from './hero/HeroCommandBar'
 import { HeroSocialProof } from './hero/HeroSocialProof'
 import { HeroWorkspaceMockup } from './hero/HeroWorkspaceMockup'
 
-export function Hero() {
+interface HeroProps {
+  session?: {
+    user?: {
+      name?: string | null;
+      email?: string | null;
+      image?: string | null;
+      id?: string | null;
+    } | null;
+  } | null;
+}
+
+export function Hero({ session }: HeroProps) {
+  const router = useRouter()
+
   const handleAuth = (e: React.MouseEvent) => {
     e.preventDefault()
-    signIn('google', { callbackUrl: '/connect' })
+    if (session?.user) {
+      router.push('/connect')
+    } else {
+      signIn('google', { callbackUrl: '/connect' })
+    }
   }
 
   return (

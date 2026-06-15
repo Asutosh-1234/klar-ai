@@ -1,13 +1,31 @@
 'use client'
 import { signIn } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 
-export function CTA() {
+interface CTAProps {
+  session?: {
+    user?: {
+      name?: string | null;
+      email?: string | null;
+      image?: string | null;
+      id?: string | null;
+    } | null;
+  } | null;
+}
+
+export function CTA({ session }: CTAProps) {
+  const router = useRouter()
+
   const handleAuth = (e: React.MouseEvent) => {
     e.preventDefault()
-    signIn('google', { callbackUrl: '/connect' })
+    if (session?.user) {
+      router.push('/connect')
+    } else {
+      signIn('google', { callbackUrl: '/connect' })
+    }
   }
 
   return (

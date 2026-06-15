@@ -16,10 +16,10 @@ export default async function Home() {
     <div className="relative min-h-screen bg-background text-on-background flex flex-col pt-16">
       <Navbar session={session} />
       <main className="flex-1">
-        <Hero />
+        <Hero session={session} />
         <SocialProof />
         <Features />
-        <CTA />
+        <CTA session={session} />
         <Pricing />
       </main>
       <Footer />

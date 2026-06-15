@@ -48,57 +48,80 @@ export default async function ConnectPage() {
 
       {/* Main Content */}
       <main className="relative z-10 flex-1 max-w-5xl mx-auto px-gutter py-12 flex flex-col gap-10 w-full">
-        {/* Title Area */}
-        <div className="text-center md:text-left max-w-2xl">
-          <h1 className="text-2xl font-bold tracking-tight text-white mb-3 leading-tight">
-            Connect your Workspace
-          </h1>
-          <p className="text-xs text-on-surface-variant leading-relaxed font-normal">
-            Link Gmail and Google Calendar to empower Klar AI to manage your schedule, summarize conversations, and draft responses.
-          </p>
-        </div>
+        {isGmailConnected && isCalendarConnected ? (
+          <div className="flex-1 flex flex-col items-center justify-center text-center py-12 max-w-md mx-auto">
+            <div className="w-20 h-20 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center mb-8 shadow-[0_0_35px_rgba(242,202,80,0.1)]">
+              <span className="material-symbols-outlined text-primary text-4xl font-bold">check_circle</span>
+            </div>
+            <h1 className="text-2xl font-bold tracking-tight text-white mb-3">
+              Aether OS Workspace is Ready
+            </h1>
+            <p className="text-xs text-on-surface-variant leading-relaxed mb-8 max-w-xs opacity-80">
+              Your Gmail and Google Calendar are successfully synchronized. Aether OS is ready to orchestrate your communications, summarize schedules, and automate actions.
+            </p>
+            <a
+              href="/gmail"
+              className="w-full py-3.5 bg-primary hover:bg-primary-hover active:scale-[0.98] transition-all text-surface-sidebar rounded-lg text-xs font-bold flex items-center justify-center gap-2 shadow-[0_4px_16px_rgba(242,202,80,0.25)] hover:shadow-[0_6px_20px_rgba(242,202,80,0.35)] cursor-pointer"
+            >
+              <span className="material-symbols-outlined text-xs font-bold">rocket_launch</span>
+              Enter Aether OS Workspace
+            </a>
+          </div>
+        ) : (
+          <>
+            {/* Title Area */}
+            <div className="text-center md:text-left max-w-2xl">
+              <h1 className="text-2xl font-bold tracking-tight text-white mb-3 leading-tight">
+                Connect your Workspace
+              </h1>
+              <p className="text-xs text-on-surface-variant leading-relaxed font-normal">
+                Link Gmail and Google Calendar to empower Klar AI to manage your schedule, summarize conversations, and draft responses.
+              </p>
+            </div>
 
-        {/* Integration Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Gmail Card */}
-          <IntegrationCard
-            title="Google Gmail"
-            description="Allows Klar to fetch, label, compose, and send emails on your behalf based on natural language input."
-            icon="mail"
-            isConnected={isGmailConnected}
-            scopes={[
-              "Read and view email threads & metadata",
-              "Modify labels, mark read/unread, and archive threads",
-              "Compose drafts and send replies",
-            ]}
-            connectUrl="/api/connect?plugin=gmail"
-            connectedAction={{
-              type: "link",
-              text: "Go to Gmail Inbox",
-              href: "/gmail",
-            }}
-            connectActionText="Connect Gmail"
-          />
+            {/* Integration Cards Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Gmail Card */}
+              <IntegrationCard
+                title="Google Gmail"
+                description="Allows Klar to fetch, label, compose, and send emails on your behalf based on natural language input."
+                icon="mail"
+                isConnected={isGmailConnected}
+                scopes={[
+                  "Read and view email threads & metadata",
+                  "Modify labels, mark read/unread, and archive threads",
+                  "Compose drafts and send replies",
+                ]}
+                connectUrl="/api/connect?plugin=gmail"
+                connectedAction={{
+                  type: "link",
+                  text: "Go to Gmail Inbox",
+                  href: "/gmail",
+                }}
+                connectActionText="Connect Gmail"
+              />
 
-          {/* Calendar Card */}
-          <IntegrationCard
-            title="Google Calendar"
-            description="Enables Klar to schedule, modify, list, and delete event invites in response to scheduling commands."
-            icon="calendar_today"
-            isConnected={isCalendarConnected}
-            scopes={[
-              "View your calendar schedule and event details",
-              "Create, schedule, edit, and delete calendar invites",
-              "Manage invitations and responder lists",
-            ]}
-            connectUrl="/api/connect?plugin=googlecalendar"
-            connectedAction={{
-              type: "button",
-              text: "Calendar Connected",
-            }}
-            connectActionText="Connect Calendar"
-          />
-        </div>
+              {/* Calendar Card */}
+              <IntegrationCard
+                title="Google Calendar"
+                description="Enables Klar to schedule, modify, list, and delete event invites in response to scheduling commands."
+                icon="calendar_today"
+                isConnected={isCalendarConnected}
+                scopes={[
+                  "View your calendar schedule and event details",
+                  "Create, schedule, edit, and delete calendar invites",
+                  "Manage invitations and responder lists",
+                ]}
+                connectUrl="/api/connect?plugin=googlecalendar"
+                connectedAction={{
+                  type: "button",
+                  text: "Calendar Connected",
+                }}
+                connectActionText="Connect Calendar"
+              />
+            </div>
+          </>
+        )}
 
         {/* Terms, Conditions & Privacy Disclosures */}
         <SecurityDisclosures />

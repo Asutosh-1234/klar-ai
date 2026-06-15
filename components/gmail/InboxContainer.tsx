@@ -6,7 +6,11 @@ import { InboxSidebar } from "./InboxSidebar";
 import { ComposeModal } from "./ComposeModal";
 import { MailList } from "./MailList";
 import { MailDetails } from "./MailDetails";
-import { id } from "date-fns/locale";
+import { AICommandCenter } from "./AICommandCenter";
+import { AetherCalendarView } from "./AetherCalendarView";
+import { AetherPurchasesView } from "./AetherPurchasesView";
+import { AetherAgentsView } from "./AetherAgentsView";
+import { AetherSettingsView } from "./AetherSettingsView";
 
 import { UserProfile, InboxContainerProps } from "@/lib/types";
 
@@ -63,7 +67,24 @@ export function InboxContainer({ user }: InboxContainerProps) {
 
   const onSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    fetchEmails(searchQuery);
+    if (!["CALENDAR", "PURCHASES", "AGENTS", "SETTINGS"].includes(selectedFolder)) {
+      fetchEmails(searchQuery);
+    }
+  };
+
+  const getSearchPlaceholder = () => {
+    switch (selectedFolder) {
+      case "CALENDAR":
+        return "Search events or agents...";
+      case "PURCHASES":
+        return "Search transactions, invoices, or vendors...";
+      case "AGENTS":
+        return "Search active agents...";
+      case "SETTINGS":
+        return "Search configuration options...";
+      default:
+        return "Search mail and attachments...";
+    }
   };
 
   return (
@@ -83,93 +104,110 @@ export function InboxContainer({ user }: InboxContainerProps) {
         {/* TopNavBar */}
         <header className="flex justify-between items-center w-full px-6 h-16 bg-background border-b border-white/5 z-40 shrink-0">
           <form onSubmit={onSearchSubmit} className="flex items-center flex-1 max-w-2xl">
-            <div className="relative w-full rounded-md border-2">
+            <div className="relative w-full border border-white/10 rounded-lg bg-surface-sidebar">
               <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-lg">
                 search
               </span>
               <input
                 type="text"
-                placeholder="Search mail and attachments..."
+                placeholder={getSearchPlaceholder()}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-surface-sidebar border-none rounded-full py-2 pl-10 pr-4 text-xs focus:ring-1 focus:ring-primary/40 placeholder:text-outline transition-all text-shadow-zinc-600 font-body-md"
+                className="w-full bg-transparent border-none rounded-lg py-2 pl-10 pr-4 text-xs focus:ring-1 focus:ring-primary/40 placeholder:text-outline transition-all text-shadow-zinc-600 font-body-md"
               />
             </div>
           </form>
 
           <div className="flex items-center gap-4 text-on-surface-variant ml-4 shrink-0">
-            <div className="flex gap-6 mr-6">
-              <button
-                type="button"
-                onClick={() => {
-                  setSearchQuery("");
-                  fetchEmails("");
-                }}
-                className={`font-label-caps text-xs tracking-wider transition-colors cursor-pointer ${
-                  !searchQuery ? "text-primary border-b-2 border-primary pb-1" : "hover:text-primary opacity-80 hover:opacity-100"
-                }`}
-              >
-                All Mail
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setSearchQuery("is:unread");
-                  fetchEmails("is:unread");
-                }}
-                className={`font-label-caps text-xs tracking-wider transition-colors cursor-pointer ${
-                  searchQuery === "is:unread" ? "text-primary border-b-2 border-primary pb-1" : "hover:text-primary opacity-80 hover:opacity-100"
-                }`}
-              >
-                Unread
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setSearchQuery("is:starred");
-                  fetchEmails("is:starred");
-                }}
-                className={`font-label-caps text-xs tracking-wider transition-colors cursor-pointer ${
-                  searchQuery === "is:starred" ? "text-primary border-b-2 border-primary pb-1" : "hover:text-primary opacity-80 hover:opacity-100"
-                }`}
-              >
-                Flagged
-              </button>
-            </div>
+            {!["CALENDAR", "PURCHASES", "AGENTS", "SETTINGS"].includes(selectedFolder) && (
+              <div className="flex gap-6 mr-6">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearchQuery("");
+                    fetchEmails("");
+                  }}
+                  className={`font-label-caps text-xs tracking-wider transition-colors cursor-pointer ${
+                    !searchQuery ? "text-primary border-b-2 border-primary pb-1" : "hover:text-primary opacity-80 hover:opacity-100"
+                  }`}
+                >
+                  All Mail
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearchQuery("is:unread");
+                    fetchEmails("is:unread");
+                  }}
+                  className={`font-label-caps text-xs tracking-wider transition-colors cursor-pointer ${
+                    searchQuery === "is:unread" ? "text-primary border-b-2 border-primary pb-1" : "hover:text-primary opacity-80 hover:opacity-100"
+                  }`}
+                >
+                  Unread
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearchQuery("is:starred");
+                    fetchEmails("is:starred");
+                  }}
+                  className={`font-label-caps text-xs tracking-wider transition-colors cursor-pointer ${
+                    searchQuery === "is:starred" ? "text-primary border-b-2 border-primary pb-1" : "hover:text-primary opacity-80 hover:opacity-100"
+                  }`}
+                >
+                  Flagged
+                </button>
+              </div>
+            )}
             <button className="hover:text-primary transition-colors material-symbols-outlined cursor-pointer">settings</button>
             <button className="hover:text-primary transition-colors material-symbols-outlined cursor-pointer">help</button>
           </div>
         </header>
 
-        {/* Split View or List View Content */}
+        {/* Content Area Rendering */}
         <div className="flex flex-1 overflow-hidden min-w-0">
-          {/* Email List Pane */}
-          <MailList
-            messages={messages}
-            loading={loading}
-            error={error}
-            selectedMessage={selectedMessage}
-            onSelectMessage={setSelectedMessage}
-            selectedFolder={selectedFolder}
-            selectedCategory={selectedCategory}
-            setSelectedCategory={setSelectedCategory}
-            archiveMessage={archiveMessage}
-            deleteMessage={deleteMessage}
-            toggleReadStatus={toggleReadStatus}
-            isSplitView={isSplitView}
-          />
+          {selectedFolder === "CALENDAR" ? (
+            <AetherCalendarView />
+          ) : selectedFolder === "PURCHASES" ? (
+            <AetherPurchasesView />
+          ) : selectedFolder === "AGENTS" ? (
+            <AetherAgentsView />
+          ) : selectedFolder === "SETTINGS" ? (
+            <AetherSettingsView />
+          ) : (
+            <>
+              {/* Email List Pane */}
+              <MailList
+                messages={messages}
+                loading={loading}
+                error={error}
+                selectedMessage={selectedMessage}
+                onSelectMessage={setSelectedMessage}
+                selectedFolder={selectedFolder}
+                selectedCategory={selectedCategory}
+                setSelectedCategory={setSelectedCategory}
+                archiveMessage={archiveMessage}
+                deleteMessage={deleteMessage}
+                toggleReadStatus={toggleReadStatus}
+                isSplitView={isSplitView}
+              />
 
-          {/* Email Details Pane */}
-          {selectedMessage && (
-            <MailDetails
-              message={selectedMessage}
-              sendingDraftId={sendingDraftId}
-              onSendDraft={handleSendDraft}
-              onClose={() => setSelectedMessage(null)}
-              onDelete={deleteMessage}
-            />
+              {/* Email Details Pane */}
+              {selectedMessage && (
+                <MailDetails
+                  message={selectedMessage}
+                  sendingDraftId={sendingDraftId}
+                  onSendDraft={handleSendDraft}
+                  onClose={() => setSelectedMessage(null)}
+                  onDelete={deleteMessage}
+                />
+              )}
+            </>
           )}
         </div>
+
+        {/* Floating AI Command Center overlay on primary Inbox view */}
+        {selectedFolder === "INBOX" && <AICommandCenter />}
       </main>
 
       {/* Compose Draft Modal */}
