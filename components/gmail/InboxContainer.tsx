@@ -38,11 +38,15 @@ export function InboxContainer({ user }: InboxContainerProps) {
     setComposeSubject,
     composeBody,
     setComposeBody,
+    attachments,
+    setAttachments,
     validationErrors,
     isSavingDraft,
+    isSending,
     sendingDraftId,
     handleSaveDraft,
     handleSendDraft,
+    handleSendCompose,
     openCompose,
   } = useGmailDrafts({
     onDraftSaved: () => {
@@ -178,9 +182,13 @@ export function InboxContainer({ user }: InboxContainerProps) {
         setComposeSubject={setComposeSubject}
         composeBody={composeBody}
         setComposeBody={setComposeBody}
+        attachments={attachments}
+        setAttachments={setAttachments}
         validationErrors={validationErrors}
         isSavingDraft={isSavingDraft}
+        isSending={isSending}
         onSubmit={handleSaveDraft}
+        onSendCompose={handleSendCompose}
       />
 
     </div>

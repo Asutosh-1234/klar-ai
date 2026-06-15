@@ -1,6 +1,11 @@
 'use client'
 
+import { useRef, useState } from "react";
 import { ComposeModalProps } from "@/lib/types";
+import { ComposeHeader } from "./ComposeHeader";
+import { ComposeRecipients } from "./ComposeRecipients";
+import { ComposeAttachments } from "./ComposeAttachments";
+import { ComposeToolbar } from "./ComposeToolbar";
 
 export function ComposeModal({
   isOpen,
@@ -11,99 +16,167 @@ export function ComposeModal({
   setComposeSubject,
   composeBody,
   setComposeBody,
+  attachments,
+  setAttachments,
   validationErrors,
   isSavingDraft,
+  isSending,
   onSubmit,
+  onSendCompose,
 }: ComposeModalProps) {
+  const [windowState, setWindowState] = useState<'normal' | 'minimized' | 'maximized'>('normal');
+  const [showCc, setShowCc] = useState(false);
+  const [showBcc, setShowBcc] = useState(false);
+  const [composeCc, setComposeCc] = useState("");
+  const [composeBcc, setComposeBcc] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const handleEmojiSelect = (emoji: string) => {
+    const textarea = textareaRef.current;
+    if (!textarea) {
+      setComposeBody(composeBody + emoji);
+      return;
+    }
+
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const text = textarea.value;
+    const before = text.substring(0, start);
+    const after = text.substring(end, text.length);
+
+    setComposeBody(before + emoji + after);
+
+    // Focus back on the textarea and set cursor position right after the inserted emoji
+    setTimeout(() => {
+      textarea.focus();
+      textarea.setSelectionRange(start + emoji.length, start + emoji.length);
+    }, 0);
+  };
+
   if (!isOpen) return null;
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files) return;
+    const newFiles = Array.from(e.target.files);
+    newFiles.forEach((file) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const base64 = (reader.result as string).split(",")[1];
+        setAttachments((prev) => [
+          ...prev,
+          {
+            filename: file.name,
+            mimeType: file.type || "application/octet-stream",
+            content: base64,
+            size: file.size,
+          },
+        ]);
+      };
+      reader.readAsDataURL(file);
+    });
+    // Reset file input value so same file can be attached again
+    e.target.value = "";
+  };
+
+  const removeAttachment = (index: number) => {
+    setAttachments((prev) => prev.filter((_, idx) => idx !== index));
+  };
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs transition-all duration-300">
-      <div className="w-full max-w-lg glass-card border border-white/6 rounded-xl bg-surface-card p-6 shadow-[0_12px_40px_rgba(0,0,0,0.6)] flex flex-col glow-accent">
-        <div className="flex justify-between items-center mb-6 relative z-10">
-          <h3 className="text-sm font-semibold text-white tracking-tight">New Draft</h3>
-          <button
-            type="button"
-            onClick={onClose}
-            className="text-on-surface-variant hover:text-white transition-colors duration-150 cursor-pointer flex items-center justify-center"
-          >
-            <span className="material-symbols-outlined text-lg">close</span>
-          </button>
-        </div>
+    <>
+      {/* Backdrop - only visible in maximized mode */}
+      {windowState === 'maximized' && (
+        <div 
+          className="fixed inset-0 bg-black/70 backdrop-blur-xs z-50 transition-all duration-300 pointer-events-auto" 
+          onClick={onClose} 
+        />
+      )}
 
-        <form onSubmit={onSubmit} className="flex flex-col gap-4 text-left relative z-10">
-          <div>
-            <label className="block text-[10px] font-semibold text-on-surface-variant uppercase tracking-wider mb-2">
-              To:
-            </label>
-            <input
-              type="text"
-              placeholder="recipient@domain.com"
-              value={composeTo}
-              onChange={(e) => setComposeTo(e.target.value)}
-              className={`w-full bg-white/2 border rounded-lg px-3.5 py-2 text-xs text-white placeholder-on-surface-variant/40 focus:outline-none focus:ring-1 ${
-                validationErrors.to
-                  ? "border-red-500/50 focus:border-red-500 focus:ring-red-500/10"
-                  : "border-white/6 focus:border-primary/40 focus:ring-primary/20"
-              }`}
+      {/* Compose Window Container */}
+      <div 
+        className={`fixed z-50 bg-[#0F131A] border border-white/10 shadow-[0_12px_40px_rgba(0,0,0,0.6)] flex flex-col transition-all duration-300 pointer-events-auto ${
+          windowState === 'minimized'
+            ? 'bottom-0 right-12 w-[280px] h-10 rounded-t-xl overflow-hidden'
+            : windowState === 'maximized'
+            ? 'inset-10 m-auto w-[85%] h-[85%] max-w-5xl max-h-[800px] rounded-xl overflow-hidden'
+            : 'bottom-0 right-12 w-[580px] h-[550px] rounded-t-xl overflow-hidden'
+        }`}
+      >
+        {/* Title Bar Header */}
+        <ComposeHeader
+          subject={composeSubject}
+          windowState={windowState}
+          setWindowState={setWindowState}
+          onClose={onClose}
+        />
+
+        {/* Validation Errors Header Banner */}
+        {windowState !== 'minimized' && (validationErrors.to || validationErrors.body) && (
+          <div className="px-4 py-2 bg-red-500/10 border-b border-red-500/20 text-red-400 text-[10px] font-medium flex flex-col gap-0.5">
+            {validationErrors.to && <p>• {validationErrors.to[0]}</p>}
+            {validationErrors.body && <p>• {validationErrors.body[0]}</p>}
+          </div>
+        )}
+
+        {/* Compose Form */}
+        {windowState !== 'minimized' && (
+          <form onSubmit={onSubmit} className="flex-1 flex flex-col min-h-0 text-left relative z-10">
+            {/* Recipients (To, CC, BCC) fields */}
+            <ComposeRecipients
+              composeTo={composeTo}
+              setComposeTo={setComposeTo}
+              showCc={showCc}
+              setShowCc={setShowCc}
+              showBcc={showBcc}
+              setShowBcc={setShowBcc}
+              composeCc={composeCc}
+              setComposeCc={setComposeCc}
+              composeBcc={composeBcc}
+              setComposeBcc={setComposeBcc}
             />
-            {validationErrors.to && (
-              <p className="text-red-400 text-[10px] mt-1">{validationErrors.to[0]}</p>
-            )}
-          </div>
 
-          <div>
-            <label className="block text-[10px] font-semibold text-on-surface-variant uppercase tracking-wider mb-2">
-              Subject:
-            </label>
-            <input
-              type="text"
-              placeholder="Draft Subject"
-              value={composeSubject}
-              onChange={(e) => setComposeSubject(e.target.value)}
-              className="w-full bg-white/2 border border-white/6 rounded-lg px-3.5 py-2 text-xs text-white placeholder-on-surface-variant/40 focus:outline-none focus:border-primary/40 focus:ring-1 focus:ring-primary/20"
+            {/* Subject field */}
+            <div className="flex items-center px-4 py-2.5 border-b border-white/5">
+              <input
+                type="text"
+                value={composeSubject}
+                onChange={(e) => setComposeSubject(e.target.value)}
+                placeholder="Subject"
+                className="bg-transparent w-full text-xs text-white focus:outline-none placeholder-on-surface-variant/30 font-medium"
+              />
+            </div>
+
+            {/* Message Body Input & Attachment list container */}
+            <div className="flex-1 flex flex-col min-h-0 overflow-y-auto custom-scrollbar p-4">
+              <textarea
+                ref={textareaRef}
+                value={composeBody}
+                onChange={(e) => setComposeBody(e.target.value)}
+                placeholder="Write your email here..."
+                className="flex-1 bg-transparent text-xs text-white outline-none resize-none min-h-[120px] placeholder-on-surface-variant/20 leading-relaxed"
+              />
+
+              {/* Attachments Section */}
+              <ComposeAttachments
+                attachments={attachments}
+                onRemove={removeAttachment}
+              />
+            </div>
+
+            {/* Bottom Actions Toolbar */}
+            <ComposeToolbar
+              isSending={isSending}
+              isSavingDraft={isSavingDraft}
+              onSend={onSendCompose}
+              onClose={onClose}
+              fileInputRef={fileInputRef}
+              handleFileChange={handleFileChange}
+              onEmojiSelect={handleEmojiSelect}
             />
-          </div>
-
-          <div>
-            <label className="block text-[10px] font-semibold text-on-surface-variant uppercase tracking-wider mb-2">
-              Message:
-            </label>
-            <textarea
-              placeholder="Write your draft content here..."
-              rows={8}
-              value={composeBody}
-              onChange={(e) => setComposeBody(e.target.value)}
-              className={`w-full bg-white/2 border rounded-lg p-3.5 text-xs text-white placeholder-on-surface-variant/40 focus:outline-none focus:ring-1 resize-none ${
-                validationErrors.body
-                  ? "border-red-500/50 focus:border-red-500 focus:ring-red-500/10"
-                  : "border-white/6 focus:border-primary/40 focus:ring-primary/20"
-              }`}
-            />
-            {validationErrors.body && (
-              <p className="text-red-400 text-[10px] mt-1">{validationErrors.body[0]}</p>
-            )}
-          </div>
-
-          <div className="flex justify-end gap-2.5 mt-4">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 border border-white/6 text-white rounded-lg text-xs font-semibold hover:bg-white/4 hover:border-white/10 transition-all duration-150 cursor-pointer"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={isSavingDraft}
-              className="px-5 py-2 bg-primary hover:bg-primary-hover active:scale-[0.98] transition-all duration-200 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer shadow-[0_4px_12px_rgba(139,92,246,0.2)]"
-            >
-              <span className="material-symbols-outlined text-xs">save</span>
-              {isSavingDraft ? "Saving..." : "Save Draft"}
-            </button>
-          </div>
-        </form>
+          </form>
+        )}
       </div>
-    </div>
+    </>
   );
 }

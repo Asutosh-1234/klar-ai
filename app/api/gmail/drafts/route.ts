@@ -1,7 +1,6 @@
 import { NextResponse, NextRequest } from "next/server";
 import { getSessionTenantId } from "@/lib/auth/session";
-import { getAllDraftMails } from "@/lib/services/gmail.service";
-import { corsair } from "@/corsair";
+import { getAllDraftMails, getDraftDetails, createDraft } from "@/lib/services/gmail.service";
 import { createDraftSchema } from "@/lib/validations/draft";
 
 export async function GET(request: NextRequest) {
@@ -17,12 +16,11 @@ export async function GET(request: NextRequest) {
     }
 
     // Enrich drafts by fetching full details for each
-    const client = corsair.withTenant(tenantId);
     const enrichedDrafts = await Promise.all(
       drafts.map(async (draft: { id?: string | null }) => {
         if (!draft.id) return null;
         try {
-          const fullDraft = await client.gmail.api.drafts.get({ id: draft.id });
+          const fullDraft = await getDraftDetails(tenantId, draft.id);
           return fullDraft;
         } catch (err) {
           console.error(`Failed to get details for draft ${draft.id}:`, err);
@@ -58,17 +56,61 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { to, subject, body, threadId } = result.data;
+    const { to, subject, body, threadId, attachments } = result.data;
 
     // Create raw MIME message
-    const mimeMessage = [
-      `To: ${to}`,
-      `Subject: =?utf-8?B?${Buffer.from(subject).toString("base64")}?=`,
-      'Content-Type: text/html; charset="UTF-8"',
-      'MIME-Version: 1.0',
-      '',
-      body
-    ].join('\r\n');
+    let mimeMessage = "";
+    if (attachments && attachments.length > 0) {
+      const boundary = "----=_Part_" + Date.now().toString(16);
+      const headers = [
+        `To: ${to}`,
+        `Subject: =?utf-8?B?${Buffer.from(subject).toString("base64")}?=`,
+        `Content-Type: multipart/mixed; boundary="${boundary}"`,
+        'MIME-Version: 1.0',
+        ''
+      ];
+
+      const bodyPart = [
+        `--${boundary}`,
+        'Content-Type: text/html; charset="UTF-8"',
+        'Content-Transfer-Encoding: 7bit',
+        '',
+        body,
+        ''
+      ];
+
+      const attachmentParts = attachments.map((att) => {
+        // Wrap base64 text at 76 characters per line (standard MIME specification)
+        const wrappedContent = att.content.replace(/(.{76})/g, "$1\r\n");
+        return [
+          `--${boundary}`,
+          `Content-Type: ${att.mimeType}; name="${att.filename}"`,
+          `Content-Disposition: attachment; filename="${att.filename}"`,
+          'Content-Transfer-Encoding: base64',
+          '',
+          wrappedContent,
+          ''
+        ].join('\r\n');
+      });
+
+      const footer = `--${boundary}--`;
+
+      mimeMessage = [
+        ...headers,
+        ...bodyPart,
+        ...attachmentParts,
+        footer
+      ].join('\r\n');
+    } else {
+      mimeMessage = [
+        `To: ${to}`,
+        `Subject: =?utf-8?B?${Buffer.from(subject).toString("base64")}?=`,
+        'Content-Type: text/html; charset="UTF-8"',
+        'MIME-Version: 1.0',
+        '',
+        body
+      ].join('\r\n');
+    }
 
     // Convert to Base64Url
     const raw = Buffer.from(mimeMessage)
@@ -77,15 +119,7 @@ export async function POST(request: NextRequest) {
       .replace(/\//g, "_")
       .replace(/=+$/, "");
 
-    const client = corsair.withTenant(tenantId);
-    const draft = await client.gmail.api.drafts.create({
-      draft: {
-        message: {
-          raw,
-          threadId: threadId || undefined
-        }
-      }
-    });
+    const draft = await createDraft(tenantId, raw, threadId);
 
     return NextResponse.json({ success: true, draft });
   } catch (error: unknown) {

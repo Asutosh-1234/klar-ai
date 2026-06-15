@@ -1,7 +1,6 @@
 import { NextResponse, NextRequest } from "next/server";
 import { getSessionTenantId } from "@/lib/auth/session";
-import { getAllMails } from "@/lib/services/gmail.service";
-import { corsair } from "@/corsair";
+import { getAllMails, getMessageDetails } from "@/lib/services/gmail.service";
 
 export async function GET(request: NextRequest) {
   try {
@@ -26,12 +25,11 @@ export async function GET(request: NextRequest) {
     }
 
     // Enrich messages by fetching full detail for each message
-    const client = corsair.withTenant(tenantId);
     const enrichedMessages = await Promise.all(
       messages.map(async (msg: { id?: string | null; threadId?: string | null }) => {
         if (!msg.id) return null;
         try {
-          const fullMsg = await client.gmail.api.messages.get({ id: msg.id });
+          const fullMsg = await getMessageDetails(tenantId, msg.id);
           return fullMsg;
         } catch (err) {
           console.error(`Failed to get details for message ${msg.id}:`, err);

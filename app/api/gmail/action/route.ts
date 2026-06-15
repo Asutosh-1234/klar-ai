@@ -1,6 +1,6 @@
 import { NextResponse, NextRequest } from "next/server";
 import { getSessionTenantId } from "@/lib/auth/session";
-import { corsair } from "@/corsair";
+import { modifyMessage, trashMessage } from "@/lib/services/gmail.service";
 
 export async function POST(request: NextRequest) {
   try {
@@ -16,25 +16,18 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Missing messageId or action" }, { status: 400 });
     }
 
-    const client = corsair.withTenant(tenantId);
-
     if (action === "archive") {
-      await client.gmail.api.messages.modify({
-        id: messageId,
+      await modifyMessage(tenantId, messageId, {
         removeLabelIds: ["INBOX"]
       });
     } else if (action === "delete") {
-      await client.gmail.api.messages.trash({
-        id: messageId
-      });
+      await trashMessage(tenantId, messageId);
     } else if (action === "markRead") {
-      await client.gmail.api.messages.modify({
-        id: messageId,
+      await modifyMessage(tenantId, messageId, {
         removeLabelIds: ["UNREAD"]
       });
     } else if (action === "markUnread") {
-      await client.gmail.api.messages.modify({
-        id: messageId,
+      await modifyMessage(tenantId, messageId, {
         addLabelIds: ["UNREAD"]
       });
     } else {

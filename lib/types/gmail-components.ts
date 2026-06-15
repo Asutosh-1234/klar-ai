@@ -2,6 +2,13 @@ import * as React from "react";
 import { GmailMessage } from "./gmail";
 import { UserProfile } from "./user";
 
+export interface ComposeAttachment {
+  filename: string;
+  mimeType: string;
+  content: string; // base64 string
+  size: number;
+}
+
 export interface ComposeModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -11,9 +18,13 @@ export interface ComposeModalProps {
   setComposeSubject: (subject: string) => void;
   composeBody: string;
   setComposeBody: (body: string) => void;
+  attachments: ComposeAttachment[];
+  setAttachments: React.Dispatch<React.SetStateAction<ComposeAttachment[]>>;
   validationErrors: { to?: string[]; body?: string[] };
   isSavingDraft: boolean;
+  isSending: boolean;
   onSubmit: (e: React.FormEvent) => void;
+  onSendCompose: () => Promise<void>;
 }
 
 export interface MailActionBarProps {

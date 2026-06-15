@@ -1,6 +1,6 @@
 import { NextResponse, NextRequest } from "next/server";
 import { getSessionTenantId } from "@/lib/auth/session";
-import { corsair } from "@/corsair";
+import { sendDraft } from "@/lib/services/gmail.service";
 
 export async function POST(request: NextRequest) {
   try {
@@ -14,10 +14,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Missing draftId" }, { status: 400 });
     }
 
-    const client = corsair.withTenant(tenantId);
-    const result = await client.gmail.api.drafts.send({
-      id: draftId
-    });
+    const result = await sendDraft(tenantId, draftId);
 
     return NextResponse.json({ success: true, result });
   } catch (error: unknown) {
