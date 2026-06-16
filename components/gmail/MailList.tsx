@@ -1,5 +1,6 @@
 'use client'
 
+import { useState, useEffect, useRef } from "react";
 import { getHeader, getSenderName, formatDate } from "@/lib/utils/gmail";
 import { GmailMessage, MailListProps } from "@/lib/types";
 import { EmailCheckbox } from "./EmailCheckbox";
@@ -24,6 +25,64 @@ export function MailList({
   toggleReadStatus,
   isSplitView,
 }: MailListProps) {
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const headerCheckboxRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    setSelectedIds([]);
+  }, [selectedFolder, selectedCategory]);
+
+  useEffect(() => {
+    setSelectedIds(prev => prev.filter(id => messages.some(m => m.id === id)));
+  }, [messages]);
+
+  const isAllSelected = messages.length > 0 && messages.every(msg => msg.id && selectedIds.includes(msg.id));
+  const isSomeSelected = messages.length > 0 && messages.some(msg => msg.id && selectedIds.includes(msg.id)) && !isAllSelected;
+
+  useEffect(() => {
+    if (headerCheckboxRef.current) {
+      headerCheckboxRef.current.indeterminate = isSomeSelected;
+    }
+  }, [isSomeSelected]);
+
+  const handleSelectMessage = (id: string, checked: boolean) => {
+    setSelectedIds(prev =>
+      checked ? [...prev, id] : prev.filter(item => item !== id)
+    );
+  };
+
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedIds(messages.map(msg => msg.id).filter((id): id is string => !!id));
+    } else {
+      setSelectedIds([]);
+    }
+  };
+
+  const handleBulkArchive = async () => {
+    const ids = [...selectedIds];
+    setSelectedIds([]);
+    for (const id of ids) {
+      await archiveMessage(id);
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    const ids = [...selectedIds];
+    setSelectedIds([]);
+    for (const id of ids) {
+      await deleteMessage(id);
+    }
+  };
+
+  const handleBulkToggleRead = async (shouldMarkRead: boolean) => {
+    const ids = [...selectedIds];
+    setSelectedIds([]);
+    for (const id of ids) {
+      await toggleReadStatus(id, shouldMarkRead);
+    }
+  };
+
   const categories = [
     { id: "primary", label: "Primary", icon: "inbox" },
     { id: "promotions", label: "Promotions", icon: "sell" },
@@ -75,9 +134,53 @@ export function MailList({
       {/* Action Header (Only in Inbox View) */}
       {!isSplitView && (
         <div className="px-6 py-2 flex items-center gap-4 text-on-surface-variant border-b border-white/5 bg-surface-sidebar z-10 shrink-0 h-10">
-          <input type="checkbox" className="w-4 h-4 rounded border-white/20 bg-transparent text-primary focus:ring-primary/20 cursor-pointer" />
-          <button className="material-symbols-outlined text-[20px] hover:text-white cursor-pointer">refresh</button>
-          <button className="material-symbols-outlined text-[20px] hover:text-white cursor-pointer">more_vert</button>
+          <input
+            ref={headerCheckboxRef}
+            type="checkbox"
+            checked={isAllSelected}
+            onChange={(e) => handleSelectAll(e.target.checked)}
+            className="w-4 h-4 rounded border-white/20 bg-transparent text-primary focus:ring-primary/20 cursor-pointer"
+          />
+          {selectedIds.length > 0 ? (
+            <div className="flex items-center gap-4">
+              <button
+                onClick={handleBulkArchive}
+                title="Archive selected"
+                className="material-symbols-outlined text-[20px] hover:text-white cursor-pointer"
+              >
+                archive
+              </button>
+              <button
+                onClick={handleBulkDelete}
+                title="Delete selected"
+                className="material-symbols-outlined text-[20px] hover:text-white cursor-pointer"
+              >
+                delete
+              </button>
+              <button
+                onClick={() => handleBulkToggleRead(true)}
+                title="Mark as read"
+                className="material-symbols-outlined text-[20px] hover:text-white cursor-pointer"
+              >
+                drafts
+              </button>
+              <button
+                onClick={() => handleBulkToggleRead(false)}
+                title="Mark as unread"
+                className="material-symbols-outlined text-[20px] hover:text-white cursor-pointer"
+              >
+                mail
+              </button>
+              <span className="text-xs text-on-surface-variant opacity-80">
+                {selectedIds.length} selected
+              </span>
+            </div>
+          ) : (
+            <>
+              <button className="material-symbols-outlined text-[20px] hover:text-white cursor-pointer">refresh</button>
+              <button className="material-symbols-outlined text-[20px] hover:text-white cursor-pointer">more_vert</button>
+            </>
+          )}
         </div>
       )}
 
@@ -158,7 +261,10 @@ export function MailList({
                 >
                   {/* Checkbox + Star */}
                   <div className="flex items-center gap-4 w-16 shrink-0">
-                    <EmailCheckbox checked={false} />
+                    <EmailCheckbox
+                      checked={msg.id ? selectedIds.includes(msg.id) : false}
+                      onChange={(checked) => msg.id && handleSelectMessage(msg.id, checked)}
+                    />
                     <EmailStar
                       isStarred={!!isStarred}
                       onToggle={() => {

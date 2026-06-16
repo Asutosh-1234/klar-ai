@@ -150,6 +150,10 @@ export function InboxContainer({ user }: InboxContainerProps) {
             setSelectedFolder("DRAFT");
             setSelectedMessage(null);
             break;
+          case "r":
+            setSelectedFolder("ARCHIVE");
+            setSelectedMessage(null);
+            break;
           case "p":
             setSelectedFolder("PURCHASES");
             setSelectedMessage(null);

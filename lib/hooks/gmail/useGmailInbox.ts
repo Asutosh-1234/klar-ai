@@ -24,6 +24,12 @@ export function useGmailInbox() {
       let res;
       if (label === "DRAFT") {
         res = await fetch(`/api/gmail/drafts`);
+      } else if (label === "ARCHIVE") {
+        let url = `/api/gmail/archive`;
+        if (query) {
+          url += `?q=${encodeURIComponent(query)}`;
+        }
+        res = await fetch(url);
       } else {
         let q = "";
         if (label === "INBOX") {

@@ -62,6 +62,12 @@ export function ShortcutsHelpModal({ isOpen, onClose }: ShortcutsHelpModalProps)
                 <KeyBadge>d</KeyBadge>
               </ShortcutRow>
 
+              <ShortcutRow label="Go to Archive">
+                <KeyBadge>g</KeyBadge>
+                <span className="text-[9px] opacity-45">➔</span>
+                <KeyBadge>r</KeyBadge>
+              </ShortcutRow>
+
               <ShortcutRow label="Go to Purchases">
                 <KeyBadge>Ctrl+P</KeyBadge>
                 <span className="text-[9px] opacity-40">or</span>

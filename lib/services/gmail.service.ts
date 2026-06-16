@@ -67,3 +67,15 @@ export const sendDraft = async (tenantId: string, draftId: string) => {
     id: draftId
   });
 }
+
+export const getArchivedMails = async (params: GmailServiceTypes) => {
+  const query = params.q ? `in:archive ${params.q}` : "in:archive";
+  const mails = await corsair.withTenant(params.tenentId).gmail.api.messages.list({
+    userId: params.userId,
+    q: query,
+    maxResults: params.maxResults,
+    pageToken: params.pageToken,
+    includeSpamTrash: params.includeSpamTrash
+  });
+  return mails.messages || [];
+}
