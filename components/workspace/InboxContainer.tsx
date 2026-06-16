@@ -229,7 +229,7 @@ export function InboxContainer({ user }: InboxContainerProps) {
     };
   }, [openCompose, isHelpOpen, isComposeOpen, selectedMessage, setSelectedFolder, setSelectedMessage]);
 
-  const onSearchSubmit = (e: React.FormEvent) => {
+  const onSearchSubmit = (e: React.SubmitEvent) => {
     e.preventDefault();
     if (!["CALENDAR", "PURCHASES", "AGENTS", "SETTINGS"].includes(selectedFolder)) {
       fetchEmails(searchQuery);

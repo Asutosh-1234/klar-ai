@@ -39,7 +39,7 @@ export function AICommandCenter() {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, loading]);
 
-  const handleSendCommand = async (e: React.FormEvent) => {
+  const handleSendCommand = async (e: React.SubmitEvent) => {
     e.preventDefault();
     const cleanCommand = command.trim();
     if (!cleanCommand || loading) return;

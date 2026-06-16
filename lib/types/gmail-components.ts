@@ -23,7 +23,7 @@ export interface ComposeModalProps {
   validationErrors: { to?: string[]; body?: string[] };
   isSavingDraft: boolean;
   isSending: boolean;
-  onSubmit: (e: React.FormEvent) => void;
+  onSubmit: (e: React.SubmitEvent) => void;
   onSendCompose: () => Promise<void>;
 }
 

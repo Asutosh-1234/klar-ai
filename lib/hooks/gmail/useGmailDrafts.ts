@@ -19,7 +19,7 @@ export function useGmailDrafts({ onDraftSaved, onDraftSent }: UseGmailDraftsProp
   const [sendingDraftId, setSendingDraftId] = useState<string | null>(null);
   const [activeDraftId, setActiveDraftId] = useState<string | null>(null);
 
-  const handleSaveDraft = async (e?: React.FormEvent) => {
+  const handleSaveDraft = async (e?: React.SubmitEvent) => {
     if (e) e.preventDefault();
     setValidationErrors({});
     setIsSavingDraft(true);

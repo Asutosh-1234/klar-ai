@@ -88,7 +88,7 @@ export function AetherCalendarView() {
     }
   }, []);
 
-  const handleCreateEvent = async (e: React.FormEvent) => {
+  const handleCreateEvent = async (e: React.SubmitEvent) => {
     e.preventDefault();
     if (!summary) return;
 
