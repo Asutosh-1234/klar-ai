@@ -9,6 +9,8 @@ class ENV{
   static RESEND_API_KEY = this.required("RESEND_API_KEY")
   static RESEND_EMAIL = this.required("SENDER_EMAIL")
   static NEXTAUTH_URL = this.required('NEXTAUTH_URL')
+  static AI_API_KEY = this.required('AI_API_KEY')
+  static VERCEL_API_KEY = this.required('AI_GATEWAY_API_KEY')
 
   static required(name:string){
     const value = process.env[name]

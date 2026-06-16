@@ -47,3 +47,23 @@ export type CorsairEvent = Prisma.CorsairEventModel
  * 
  */
 export type Email = Prisma.EmailModel
+/**
+ * Model Plan
+ * 
+ */
+export type Plan = Prisma.PlanModel
+/**
+ * Model UserPlan
+ * 
+ */
+export type UserPlan = Prisma.UserPlanModel
+/**
+ * Model Payment
+ * 
+ */
+export type Payment = Prisma.PaymentModel
+/**
+ * Model PaymentDetails
+ * 
+ */
+export type PaymentDetails = Prisma.PaymentDetailsModel

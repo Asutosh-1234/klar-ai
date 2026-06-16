@@ -14,6 +14,7 @@
     "db:reset": "bunx --bun prisma migrate reset &&bunx --bun prisma db push &&bunx --bun prisma generate"
   },
   "dependencies": {
+    "@ai-sdk/openai": "^3.0.71",
     "@base-ui/react": "^1.5.0",
     "@corsair-dev/app": "^0.1.5",
     "@corsair-dev/cli": "^0.1.19",
@@ -27,6 +28,7 @@
     "@tiptap/pm": "^3.26.1",
     "@tiptap/react": "^3.26.1",
     "@tiptap/starter-kit": "^3.26.1",
+    "ai": "^6.0.206",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
@@ -36,6 +38,7 @@
     "embla-carousel-react": "^8.6.0",
     "emoji-picker-react": "^4.19.1",
     "framer-motion": "^12.40.0",
+    "inngest": "^4.5.1",
     "input-otp": "^1.4.2",
     "lucide-react": "^1.18.0",
     "next": "16.2.7",

@@ -15,14 +15,16 @@ datasource db {
 }
 
 model User {
-  id     String  @id @default(cuid())
-  email  String  @unique
-  name   String?
-  avatar String
+  id            String  @id @default(cuid())
+  email         String  @unique
+  name          String?
+  avatar        String
+  aiUsageCount  Int     @default(0) @map("ai_usage_count")
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
   emails    Email[]
+  plans     UserPlan[]
 
   @@map("user")
 }
@@ -98,4 +100,64 @@ model Email {
   user User @relation(fields: [userId], references: [id])
 
   @@index([userId])
+}
+
+model Plan {
+  id        String     @id @default(cuid())
+  name      String     @unique
+  limits    Json       @default("{}")
+  createdAt DateTime   @default(now()) @map("created_at")
+  updatedAt DateTime   @updatedAt @map("updated_at")
+  userPlans UserPlan[]
+
+  @@map("plan")
+}
+
+model UserPlan {
+  id        String    @id @default(cuid())
+  userId    String    @map("user_id")
+  planId    String    @map("plan_id")
+  planName  String    @map("plan_name")
+  startDate DateTime  @map("start_date")
+  endDate   DateTime  @map("end_date")
+  limits    Json      @default("{}")
+  createdAt DateTime  @map("created_at") @default(now())
+  updatedAt DateTime  @map("updated_at") @updatedAt
+  user      User      @relation(fields: [userId], references: [id])
+  plan      Plan      @relation(fields: [planId], references: [id])
+  payments  Payment[]
+
+  @@index([userId])
+  @@index([planId])
+  @@map("user_plan")
+}
+
+model Payment {
+  id             String          @id @default(cuid())
+  userPlanId     String          @map("user_plan_id")
+  amount         Float
+  currency       String          @default("USD")
+  status         String          @default("PENDING")
+  paymentMethod  String?         @map("payment_method")
+  transactionId  String?         @unique @map("transaction_id")
+  createdAt      DateTime        @map("created_at") @default(now())
+  updatedAt      DateTime        @map("updated_at") @updatedAt
+  userPlan       UserPlan        @relation(fields: [userPlanId], references: [id])
+  paymentDetails PaymentDetails?
+
+  @@index([userPlanId])
+  @@map("payment")
+}
+
+model PaymentDetails {
+  id             String  @id @default(cuid())
+  paymentId      String  @unique @map("payment_id")
+  billingAddress String? @map("billing_address")
+  cardBrand      String? @map("card_brand")
+  cardLast4      String? @map("card_last_4")
+  receiptUrl     String? @map("receipt_url")
+  metadata       Json?   @default("{}")
+  payment        Payment @relation(fields: [paymentId], references: [id])
+
+  @@map("payment_details")
 }

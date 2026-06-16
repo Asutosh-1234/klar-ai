@@ -56,7 +56,11 @@ export const ModelName = {
   CorsairAccount: 'CorsairAccount',
   CorsairEntity: 'CorsairEntity',
   CorsairEvent: 'CorsairEvent',
-  Email: 'Email'
+  Email: 'Email',
+  Plan: 'Plan',
+  UserPlan: 'UserPlan',
+  Payment: 'Payment',
+  PaymentDetails: 'PaymentDetails'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -80,6 +84,7 @@ export const UserScalarFieldEnum = {
   email: 'email',
   name: 'name',
   avatar: 'avatar',
+  aiUsageCount: 'aiUsageCount',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -156,6 +161,60 @@ export const EmailScalarFieldEnum = {
 export type EmailScalarFieldEnum = (typeof EmailScalarFieldEnum)[keyof typeof EmailScalarFieldEnum]
 
 
+export const PlanScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  limits: 'limits',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type PlanScalarFieldEnum = (typeof PlanScalarFieldEnum)[keyof typeof PlanScalarFieldEnum]
+
+
+export const UserPlanScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  planId: 'planId',
+  planName: 'planName',
+  startDate: 'startDate',
+  endDate: 'endDate',
+  limits: 'limits',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type UserPlanScalarFieldEnum = (typeof UserPlanScalarFieldEnum)[keyof typeof UserPlanScalarFieldEnum]
+
+
+export const PaymentScalarFieldEnum = {
+  id: 'id',
+  userPlanId: 'userPlanId',
+  amount: 'amount',
+  currency: 'currency',
+  status: 'status',
+  paymentMethod: 'paymentMethod',
+  transactionId: 'transactionId',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type PaymentScalarFieldEnum = (typeof PaymentScalarFieldEnum)[keyof typeof PaymentScalarFieldEnum]
+
+
+export const PaymentDetailsScalarFieldEnum = {
+  id: 'id',
+  paymentId: 'paymentId',
+  billingAddress: 'billingAddress',
+  cardBrand: 'cardBrand',
+  cardLast4: 'cardLast4',
+  receiptUrl: 'receiptUrl',
+  metadata: 'metadata'
+} as const
+
+export type PaymentDetailsScalarFieldEnum = (typeof PaymentDetailsScalarFieldEnum)[keyof typeof PaymentDetailsScalarFieldEnum]
+
+
 export const SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -169,6 +228,14 @@ export const JsonNullValueInput = {
 } as const
 
 export type JsonNullValueInput = (typeof JsonNullValueInput)[keyof typeof JsonNullValueInput]
+
+
+export const NullableJsonNullValueInput = {
+  DbNull: DbNull,
+  JsonNull: JsonNull
+} as const
+
+export type NullableJsonNullValueInput = (typeof NullableJsonNullValueInput)[keyof typeof NullableJsonNullValueInput]
 
 
 export const QueryMode = {
