@@ -1,16 +1,7 @@
 'use client'
 
 import { useState } from 'react';
-
-interface Agent {
-  id: string;
-  name: string;
-  role: string;
-  status: 'Idle' | 'Active' | 'Optimizing';
-  description: string;
-  tasksCompleted: number;
-  accuracy: string;
-}
+import { Agent } from '@/lib/types';
 
 export function AetherAgentsView() {
   const [agents, setAgents] = useState<Agent[]>([]);

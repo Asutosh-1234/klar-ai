@@ -1,24 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react';
-
-interface ChatMessage {
-  id: string;
-  role: 'user' | 'assistant';
-  text: string;
-  pendingDelete?: {
-    emailId: string;
-    subject: string;
-    sender: string;
-  } | null;
-  deleteState?: 'pending' | 'deleting' | 'deleted' | 'cancelled';
-}
-
-interface LimitInfo {
-  planName: string;
-  limit: number;
-  used: number;
-}
+import { ChatMessage, LimitInfo } from '@/lib/types';
 
 export function AICommandCenter() {
   const [isOpen, setIsOpen] = useState(true);

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react';
-import { Transaction } from './types';
+import { Transaction } from '@/lib/types';
 import { PurchaseHeader } from './PurchaseHeader';
 import { PurchaseFilterBar } from './PurchaseFilterBar';
 import { TransactionTable } from './TransactionTable';

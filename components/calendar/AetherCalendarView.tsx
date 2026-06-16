@@ -1,27 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react';
-
-interface GoogleEvent {
-  id: string;
-  summary?: string;
-  description?: string;
-  location?: string;
-  start?: {
-    date?: string;
-    dateTime?: string;
-    timeZone?: string;
-  };
-  end?: {
-    date?: string;
-    dateTime?: string;
-    timeZone?: string;
-  };
-  attendees?: {
-    email: string;
-    displayName?: string;
-  }[];
-}
+import { GoogleEvent } from '@/lib/types';
 
 export function AetherCalendarView() {
   const scrollContainerRef = useRef<HTMLDivElement>(null);

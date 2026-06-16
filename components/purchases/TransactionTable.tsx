@@ -1,7 +1,7 @@
 'use client'
 
 import * as React from "react";
-import { Transaction } from "./types";
+import { Transaction } from "@/lib/types";
 import {
   Table,
   TableHeader,
