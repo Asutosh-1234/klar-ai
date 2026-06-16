@@ -143,6 +143,24 @@ export function useGmailInbox() {
     }
   }, [fetchEmails]);
 
+  const unarchiveMessages = useCallback(async (messageIds: string[]) => {
+    if (selectedFolder === "ARCHIVE") {
+      setMessages(prev => prev.filter(m => !m.id || !messageIds.includes(m.id)));
+      setSelectedMessage(prev => prev?.id && messageIds.includes(prev.id) ? null : prev);
+    }
+    try {
+      const res = await fetch("/api/gmail/archive", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messageIds })
+      });
+      if (!res.ok) throw new Error("Failed to move to inbox");
+    } catch (err) {
+      console.error(err);
+      fetchEmails();
+    }
+  }, [selectedFolder, fetchEmails]);
+
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchEmails();
@@ -163,6 +181,7 @@ export function useGmailInbox() {
     archiveMessage,
     deleteMessage,
     toggleReadStatus,
+    unarchiveMessages,
     fetchEmails,
   };
 }

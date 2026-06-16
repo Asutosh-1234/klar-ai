@@ -32,6 +32,7 @@ export function InboxContainer({ user }: InboxContainerProps) {
     archiveMessage,
     deleteMessage,
     toggleReadStatus,
+    unarchiveMessages,
     fetchEmails,
   } = useGmailInbox();
 
@@ -364,6 +365,7 @@ export function InboxContainer({ user }: InboxContainerProps) {
                 archiveMessage={archiveMessage}
                 deleteMessage={deleteMessage}
                 toggleReadStatus={toggleReadStatus}
+                unarchiveMessages={unarchiveMessages}
                 isSplitView={isSplitView}
               />
 
@@ -375,6 +377,9 @@ export function InboxContainer({ user }: InboxContainerProps) {
                   onSendDraft={handleSendDraft}
                   onClose={() => setSelectedMessage(null)}
                   onDelete={deleteMessage}
+                  onArchive={selectedFolder === "ARCHIVE" ? (id) => unarchiveMessages([id]) : archiveMessage}
+                  onToggleRead={toggleReadStatus}
+                  isArchived={selectedFolder === "ARCHIVE"}
                 />
               )}
             </>

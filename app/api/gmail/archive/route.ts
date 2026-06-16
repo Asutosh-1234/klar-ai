@@ -1,6 +1,6 @@
 import { NextResponse, NextRequest } from "next/server";
 import { getSessionTenantId } from "@/lib/auth/session";
-import { getArchivedMails, getMessageDetails } from "@/lib/services/gmail.service";
+import { getArchivedMails, getMessageDetails, removeFromArchive } from "@/lib/services/gmail.service";
 
 export async function GET(request: NextRequest) {
   try {
@@ -43,6 +43,30 @@ export async function GET(request: NextRequest) {
     });
   } catch (error: unknown) {
     console.error("Error in GET /api/gmail/archive:", error);
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
+  }
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const tenantId = await getSessionTenantId(request);
+    if (!tenantId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const body = await request.json();
+    const { messageIds } = body;
+
+    if (!messageIds || !Array.isArray(messageIds) || messageIds.length === 0) {
+      return NextResponse.json({ error: "Missing or invalid messageIds" }, { status: 400 });
+    }
+
+    await removeFromArchive(tenantId, messageIds);
+
+    return NextResponse.json({ success: true });
+  } catch (error: unknown) {
+    console.error("Error in POST /api/gmail/archive:", error);
     const errorMessage = error instanceof Error ? error.message : String(error);
     return NextResponse.json({ error: errorMessage }, { status: 500 });
   }

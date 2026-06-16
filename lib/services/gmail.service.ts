@@ -14,7 +14,7 @@ export const getAllMails = async (params: GmailServiceTypes) => {
 }
 
 
-export const getAllDraftMails = async(tenantId: string, userId?: string)=>{
+export const getAllDraftMails = async (tenantId: string, userId?: string) => {
   const mails = await corsair.withTenant(tenantId).gmail.api.drafts.list({
     userId: userId || "me"
   })
@@ -78,4 +78,17 @@ export const getArchivedMails = async (params: GmailServiceTypes) => {
     includeSpamTrash: params.includeSpamTrash
   });
   return mails.messages || [];
+}
+
+export const removeFromArchive = async (tenantId: string, messageIds: string[]) => {
+  if (Array.isArray(messageIds)) {
+    await Promise.all(
+      messageIds.map(async (messageId) => {
+        await corsair.withTenant(tenantId).gmail.api.messages.modify({
+          id: messageId,
+          addLabelIds: ["INBOX"]
+        });
+      })
+    );
+  }
 }

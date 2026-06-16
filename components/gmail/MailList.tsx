@@ -23,6 +23,7 @@ export function MailList({
   archiveMessage,
   deleteMessage,
   toggleReadStatus,
+  unarchiveMessages,
   isSplitView,
 }: MailListProps) {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -62,8 +63,12 @@ export function MailList({
   const handleBulkArchive = async () => {
     const ids = [...selectedIds];
     setSelectedIds([]);
-    for (const id of ids) {
-      await archiveMessage(id);
+    if (selectedFolder === "ARCHIVE") {
+      await unarchiveMessages(ids);
+    } else {
+      for (const id of ids) {
+        await archiveMessage(id);
+      }
     }
   };
 
@@ -145,10 +150,10 @@ export function MailList({
             <div className="flex items-center gap-4">
               <button
                 onClick={handleBulkArchive}
-                title="Archive selected"
+                title={selectedFolder === "ARCHIVE" ? "Move to Inbox" : "Archive selected"}
                 className="material-symbols-outlined text-[20px] hover:text-white cursor-pointer"
               >
-                archive
+                {selectedFolder === "ARCHIVE" ? "unarchive" : "archive"}
               </button>
               <button
                 onClick={handleBulkDelete}
@@ -292,9 +297,10 @@ export function MailList({
                     {/* Action Icons (fade in on hover in same slot) */}
                     <EmailRowActions
                       isUnread={!!isUnread}
-                      onArchive={() => archiveMessage(msg.id!)}
+                      onArchive={() => selectedFolder === "ARCHIVE" ? unarchiveMessages([msg.id!]) : archiveMessage(msg.id!)}
                       onDelete={() => deleteMessage(msg.id!)}
                       onToggleRead={() => toggleReadStatus(msg.id!, !!isUnread)}
+                      isArchived={selectedFolder === "ARCHIVE"}
                     />
                   </div>
                 </div>

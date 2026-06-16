@@ -36,6 +36,7 @@ export interface MailActionBarProps {
   draftId: string | null;
   sendingDraftId: string | null;
   onSendDraft: (draftId: string) => void;
+  isArchived?: boolean;
 }
 
 export interface MailHeaderProps {
@@ -65,6 +66,7 @@ export interface MailDetailsProps {
   onArchive?: (id: string) => void;
   onDelete: (id: string) => void;
   onToggleRead?: (id: string, currentlyUnread: boolean) => void;
+  isArchived?: boolean;
 }
 
 export interface MailListProps {
@@ -79,6 +81,7 @@ export interface MailListProps {
   archiveMessage: (id: string) => void;
   deleteMessage: (id: string) => void;
   toggleReadStatus: (id: string, currentlyUnread: boolean) => void;
+  unarchiveMessages: (ids: string[]) => void;
   isSplitView: boolean;
 }
 
@@ -111,6 +114,7 @@ export interface EmailRowActionsProps {
   onDelete: () => void;
   onToggleRead: () => void;
   className?: string;
+  isArchived?: boolean;
 }
 
 export interface EmailCheckboxProps {

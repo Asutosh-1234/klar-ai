@@ -85,6 +85,7 @@ export function MailActionBar({
   draftId,
   sendingDraftId,
   onSendDraft,
+  isArchived = false,
 }: MailActionBarProps) {
   return (
     <div className="h-12 px-6 flex items-center justify-between border-b border-white/5 shrink-0 bg-[#0A0A0F] z-10">
@@ -101,9 +102,9 @@ export function MailActionBar({
           <button
             onClick={onArchive}
             className="material-symbols-outlined text-on-surface-variant hover:text-primary transition-colors text-xl cursor-pointer"
-            title="Archive"
+            title={isArchived ? "Move to Inbox" : "Archive"}
           >
-            archive
+            {isArchived ? "unarchive" : "archive"}
           </button>
           <button
             onClick={onDelete}
@@ -241,6 +242,7 @@ export function MailDetails({
   onArchive,
   onDelete,
   onToggleRead,
+  isArchived = false,
 }: MailDetailsProps) {
   if (!message) {
     return (
@@ -314,6 +316,7 @@ export function MailDetails({
         draftId={message.draftId || null}
         sendingDraftId={sendingDraftId}
         onSendDraft={onSendDraft}
+        isArchived={isArchived}
       />
 
       {/* Static Email Header Info */}
