@@ -4,22 +4,25 @@
 // Get a free hosted Postgres database in seconds: `npx create-db`
 
 generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
+  provider        = "prisma-client"
+  output          = "../generated/prisma"
+  previewFeatures = ["postgresqlExtensions"]
 }
 
 datasource db {
-  provider = "postgresql"
+  provider   = "postgresql"
+  extensions = [vector]
 }
 
 model User {
-  id           String  @id @default(cuid())
-  email        String  @unique
-  name         String?
-  avatar       String
+  id     String  @id @default(cuid())
+  email  String  @unique
+  name   String?
+  avatar String
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
+  emails    Email[]
 
   @@map("user")
 }
@@ -76,4 +79,23 @@ model CorsairEvent {
   account   CorsairAccount @relation(fields: [accountId], references: [id])
 
   @@map("corsair_events")
+}
+
+model Email {
+  id         String                      @id @default(cuid())
+  userId     String
+  gmailId    String                      @unique
+  subject    String?
+  sender     String?
+  snippet    String?
+  body       String?
+  priority   String?
+  isRead     Boolean                     @default(false)
+  isStarred  Boolean                     @default(false)
+  receivedAt DateTime?
+  embedding  Unsupported("vector(768)")?
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
 }

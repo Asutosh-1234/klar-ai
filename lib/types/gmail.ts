@@ -1,7 +1,8 @@
 export interface GmailMessagePart {
   mimeType?: string;
-  body?: { data?: string };
+  body?: { data?: string; attachmentId?: string; size?: number };
   parts?: GmailMessagePart[];
+  filename?: string;
 }
 
 export interface GmailMessage {

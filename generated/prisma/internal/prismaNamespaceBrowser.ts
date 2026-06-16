@@ -55,7 +55,8 @@ export const ModelName = {
   CorsairIntegration: 'CorsairIntegration',
   CorsairAccount: 'CorsairAccount',
   CorsairEntity: 'CorsairEntity',
-  CorsairEvent: 'CorsairEvent'
+  CorsairEvent: 'CorsairEvent',
+  Email: 'Email'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -136,6 +137,23 @@ export const CorsairEventScalarFieldEnum = {
 } as const
 
 export type CorsairEventScalarFieldEnum = (typeof CorsairEventScalarFieldEnum)[keyof typeof CorsairEventScalarFieldEnum]
+
+
+export const EmailScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  gmailId: 'gmailId',
+  subject: 'subject',
+  sender: 'sender',
+  snippet: 'snippet',
+  body: 'body',
+  priority: 'priority',
+  isRead: 'isRead',
+  isStarred: 'isStarred',
+  receivedAt: 'receivedAt'
+} as const
+
+export type EmailScalarFieldEnum = (typeof EmailScalarFieldEnum)[keyof typeof EmailScalarFieldEnum]
 
 
 export const SortOrder = {

@@ -36,6 +36,7 @@ export interface MailActionBarProps {
   draftId: string | null;
   sendingDraftId: string | null;
   onSendDraft: (draftId: string) => void;
+  onEditDraft?: () => void;
   isArchived?: boolean;
 }
 
@@ -58,10 +59,22 @@ export interface MailReplyBarProps {
   onForwardClick?: () => void;
 }
 
+export interface EmailRowActionsProps {
+  isUnread: boolean;
+  onArchive: () => void;
+  onDelete: () => void;
+  onToggleRead: () => void;
+  className?: string;
+  isArchived?: boolean;
+  isDraft?: boolean;
+  onEdit?: () => void;
+}
+
 export interface MailDetailsProps {
   message: GmailMessage | null;
   sendingDraftId: string | null;
   onSendDraft: (draftId: string) => void;
+  onEditDraft?: (msg: GmailMessage) => void;
   onClose: () => void;
   onArchive?: (id: string) => void;
   onDelete: (id: string) => void;
@@ -83,7 +96,9 @@ export interface MailListProps {
   toggleReadStatus: (id: string, currentlyUnread: boolean) => void;
   unarchiveMessages: (ids: string[]) => void;
   isSplitView: boolean;
+  onEditDraft?: (msg: GmailMessage) => void;
 }
+
 
 export interface InboxSidebarProps {
   user: UserProfile;
@@ -106,15 +121,6 @@ export interface EmailSenderProps {
   name: string;
   isUnread: boolean;
   className?: string;
-}
-
-export interface EmailRowActionsProps {
-  isUnread: boolean;
-  onArchive: () => void;
-  onDelete: () => void;
-  onToggleRead: () => void;
-  className?: string;
-  isArchived?: boolean;
 }
 
 export interface EmailCheckboxProps {

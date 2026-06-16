@@ -55,6 +55,7 @@ export function InboxContainer({ user }: InboxContainerProps) {
     handleSendDraft,
     handleSendCompose,
     openCompose,
+    openComposeForDraft,
   } = useGmailDrafts({
     onDraftSaved: () => {
       setSelectedFolder("DRAFT");
@@ -367,6 +368,7 @@ export function InboxContainer({ user }: InboxContainerProps) {
                 toggleReadStatus={toggleReadStatus}
                 unarchiveMessages={unarchiveMessages}
                 isSplitView={isSplitView}
+                onEditDraft={openComposeForDraft}
               />
 
               {/* Email Details Pane */}
@@ -375,6 +377,7 @@ export function InboxContainer({ user }: InboxContainerProps) {
                   message={selectedMessage}
                   sendingDraftId={sendingDraftId}
                   onSendDraft={handleSendDraft}
+                  onEditDraft={openComposeForDraft}
                   onClose={() => setSelectedMessage(null)}
                   onDelete={deleteMessage}
                   onArchive={selectedFolder === "ARCHIVE" ? (id) => unarchiveMessages([id]) : archiveMessage}

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from "react";
-import { getHeader, getSenderName, formatDate } from "@/lib/utils/gmail";
+import { getHeader, getSenderName, formatDate, getAttachments } from "@/lib/utils/gmail";
 import { GmailMessage, MailListProps } from "@/lib/types";
 import { EmailCheckbox } from "./EmailCheckbox";
 import { EmailStar } from "./EmailStar";
@@ -25,6 +25,7 @@ export function MailList({
   toggleReadStatus,
   unarchiveMessages,
   isSplitView,
+  onEditDraft,
 }: MailListProps) {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const headerCheckboxRef = useRef<HTMLInputElement>(null);
@@ -239,9 +240,16 @@ export function MailList({
                       <h3 className={`font-bold font-body-md truncate max-w-[220px] ${isUnread ? "text-white" : "text-on-surface-variant"}`}>
                         {displayName}
                       </h3>
-                      <span className="text-[10px] text-on-surface-variant opacity-60 shrink-0">
-                        {formatDate(dateVal)}
-                      </span>
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        {getAttachments(msg).length > 0 && (
+                          <span className="material-symbols-outlined text-[14px] text-on-surface-variant/60" title="Has attachments">
+                            attachment
+                          </span>
+                        )}
+                        <span className="text-[10px] text-on-surface-variant opacity-60">
+                          {formatDate(dateVal)}
+                        </span>
+                      </div>
                     </div>
                     <p className={`text-sm font-semibold truncate mb-1 ${isUnread ? "text-primary font-bold" : "text-on-surface font-semibold"}`}>
                       {subject}
@@ -282,11 +290,18 @@ export function MailList({
                   <EmailSender name={displayName} isUnread={!!isUnread} />
 
                   {/* Subject + Snippet on a single line with " - " separator */}
-                  <EmailTextContent
-                    subject={subject}
-                    snippet={msg.snippet || ""}
-                    isUnread={!!isUnread}
-                  />
+                  <div className="flex-1 flex items-center min-w-0 gap-2 pr-4">
+                    <EmailTextContent
+                      subject={subject}
+                      snippet={msg.snippet || ""}
+                      isUnread={!!isUnread}
+                    />
+                    {getAttachments(msg).length > 0 && (
+                      <span className="material-symbols-outlined text-[16px] text-on-surface-variant/40 shrink-0" title="Has attachments">
+                        attachment
+                      </span>
+                    )}
+                  </div>
 
                   {/* Date / Hover Actions (Fixed Slot Width: 80px) */}
                   <div className="w-20 shrink-0 flex justify-end text-right relative h-5 items-center">
@@ -301,6 +316,8 @@ export function MailList({
                       onDelete={() => deleteMessage(msg.id!)}
                       onToggleRead={() => toggleReadStatus(msg.id!, !!isUnread)}
                       isArchived={selectedFolder === "ARCHIVE"}
+                      isDraft={isDraft}
+                      onEdit={() => onEditDraft?.(msg)}
                     />
                   </div>
                 </div>

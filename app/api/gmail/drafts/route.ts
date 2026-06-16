@@ -1,6 +1,6 @@
 import { NextResponse, NextRequest } from "next/server";
 import { getSessionTenantId } from "@/lib/auth/session";
-import { getAllDraftMails, getDraftDetails, createDraft } from "@/lib/services/gmail.service";
+import { getAllDraftMails, getDraftDetails, createDraft, updateDraft } from "@/lib/services/gmail.service";
 import { createDraftSchema } from "@/lib/validations/draft";
 
 export async function GET(request: NextRequest) {
@@ -38,6 +38,91 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }
+
+export async function PUT(request: NextRequest) {
+  try {
+    const tenantId = await getSessionTenantId(request);
+    if (!tenantId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const bodyJson = await request.json();
+    const { draftId, to, subject, body, attachments } = bodyJson;
+
+    if (!draftId) {
+      return NextResponse.json({ error: "Missing draftId" }, { status: 400 });
+    }
+
+    // Create raw MIME message
+    let mimeMessage = "";
+    if (attachments && attachments.length > 0) {
+      const boundary = "----=_Part_" + Date.now().toString(16);
+      const headers = [
+        `To: ${to}`,
+        `Subject: =?utf-8?B?${Buffer.from(subject).toString("base64")}?=`,
+        `Content-Type: multipart/mixed; boundary="${boundary}"`,
+        'MIME-Version: 1.0',
+        ''
+      ];
+
+      const bodyPart = [
+        `--${boundary}`,
+        'Content-Type: text/html; charset="UTF-8"',
+        'Content-Transfer-Encoding: 7bit',
+        '',
+        body,
+        ''
+      ];
+
+      const attachmentParts = attachments.map((att: any) => {
+        const wrappedContent = att.content.replace(/(.{76})/g, "$1\r\n");
+        return [
+          `--${boundary}`,
+          `Content-Type: ${att.mimeType}; name="${att.filename}"`,
+          `Content-Disposition: attachment; filename="${att.filename}"`,
+          'Content-Transfer-Encoding: base64',
+          '',
+          wrappedContent,
+          ''
+        ].join('\r\n');
+      });
+
+      const footer = `--${boundary}--`;
+
+      mimeMessage = [
+        ...headers,
+        ...bodyPart,
+        ...attachmentParts,
+        footer
+      ].join('\r\n');
+    } else {
+      mimeMessage = [
+        `To: ${to}`,
+        `Subject: =?utf-8?B?${Buffer.from(subject).toString("base64")}?=`,
+        'Content-Type: text/html; charset="UTF-8"',
+        'MIME-Version: 1.0',
+        '',
+        body
+      ].join('\r\n');
+    }
+
+    // Convert to Base64Url
+    const raw = Buffer.from(mimeMessage)
+      .toString("base64")
+      .replace(/\+/g, "-")
+      .replace(/\//g, "_")
+      .replace(/=+$/, "");
+
+    const draft = await updateDraft(tenantId, draftId, raw);
+
+    return NextResponse.json({ success: true, draft });
+  } catch (error: unknown) {
+    console.error("Error in PUT /api/gmail/drafts:", error);
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
+  }
+}
+
 
 export async function POST(request: NextRequest) {
   try {

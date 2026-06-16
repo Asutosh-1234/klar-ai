@@ -1,4 +1,6 @@
+import * as React from 'react';
 import { WelcomeEmail } from '@/components/emails/welcome';
+import { render } from '@react-email/render';
 import ENV from '@/lib/config/ENV';
 import { Resend } from 'resend';
 
@@ -13,11 +15,19 @@ export async function POST(req: Request) {
       return Response.json({ error: "Missing userEmail" }, { status: 400 });
     }
 
+    const emailHtml = await render(
+      React.createElement(WelcomeEmail, {
+        firstName: userName || 'User',
+        email: userEmail,
+        avatar: userAvatar
+      })
+    );
+
     const { data, error } = await resend.emails.send({
       from: `Klar-ai <${ENV.RESEND_EMAIL}>`,
       to: [userEmail],
       subject: `Welcome to Klar, ${userName || 'User'}`,
-      react: WelcomeEmail({ firstName: userName || 'User', email: userEmail, avatar: userAvatar }),
+      html: emailHtml,
     });
 
     if (error) {

@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { ComposeAttachment } from "@/lib/types";
+import { ComposeAttachment, GmailMessage } from "@/lib/types";
+import { getHeader, getMessageBody, getAttachments } from "@/lib/utils/gmail";
 
 interface UseGmailDraftsProps {
   onDraftSaved: () => void;
@@ -16,6 +17,7 @@ export function useGmailDrafts({ onDraftSaved, onDraftSent }: UseGmailDraftsProp
   const [isSavingDraft, setIsSavingDraft] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [sendingDraftId, setSendingDraftId] = useState<string | null>(null);
+  const [activeDraftId, setActiveDraftId] = useState<string | null>(null);
 
   const handleSaveDraft = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -23,17 +25,18 @@ export function useGmailDrafts({ onDraftSaved, onDraftSent }: UseGmailDraftsProp
     setIsSavingDraft(true);
 
     try {
-      const res = await fetch("/api/gmail/drafts", {
-        method: "POST",
+      const url = "/api/gmail/drafts";
+      const method = activeDraftId ? "PUT" : "POST";
+      const bodyPayload = activeDraftId
+        ? { draftId: activeDraftId, to: composeTo, subject: composeSubject, body: composeBody, attachments }
+        : { to: composeTo, subject: composeSubject, body: composeBody, attachments };
+
+      const res = await fetch(url, {
+        method,
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          to: composeTo,
-          subject: composeSubject,
-          body: composeBody,
-          attachments,
-        }),
+        body: JSON.stringify(bodyPayload),
       });
 
       const data = await res.json();
@@ -52,6 +55,7 @@ export function useGmailDrafts({ onDraftSaved, onDraftSent }: UseGmailDraftsProp
       setComposeSubject("");
       setComposeBody("");
       setAttachments([]);
+      setActiveDraftId(null);
       onDraftSaved();
       return data.draft;
     } catch (err) {
@@ -85,32 +89,62 @@ export function useGmailDrafts({ onDraftSaved, onDraftSent }: UseGmailDraftsProp
         return;
       }
 
-      // 1. Create and Save the Draft first
-      const resSave = await fetch("/api/gmail/drafts", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          to: composeTo,
-          subject: composeSubject,
-          body: composeBody,
-          attachments,
-        }),
-      });
+      let draftId = activeDraftId;
 
-      const dataSave = await resSave.json();
-      if (!resSave.ok) {
-        if (dataSave.details) {
-          setValidationErrors(dataSave.details);
-        } else {
-          alert(dataSave.error || "Failed to create draft");
+      // 1. Create/Save or Update the Draft first
+      if (activeDraftId) {
+        const resUpdate = await fetch("/api/gmail/drafts", {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            draftId: activeDraftId,
+            to: composeTo,
+            subject: composeSubject,
+            body: composeBody,
+            attachments,
+          }),
+        });
+
+        const dataUpdate = await resUpdate.json();
+        if (!resUpdate.ok) {
+          if (dataUpdate.details) {
+            setValidationErrors(dataUpdate.details);
+          } else {
+            alert(dataUpdate.error || "Failed to update draft");
+          }
+          setIsSending(false);
+          return;
         }
-        setIsSending(false);
-        return;
+      } else {
+        const resSave = await fetch("/api/gmail/drafts", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            to: composeTo,
+            subject: composeSubject,
+            body: composeBody,
+            attachments,
+          }),
+        });
+
+        const dataSave = await resSave.json();
+        if (!resSave.ok) {
+          if (dataSave.details) {
+            setValidationErrors(dataSave.details);
+          } else {
+            alert(dataSave.error || "Failed to create draft");
+          }
+          setIsSending(false);
+          return;
+        }
+
+        draftId = dataSave.draft?.id;
       }
 
-      const draftId = dataSave.draft?.id;
       if (!draftId) {
         alert("Failed to retrieve saved draft ID.");
         setIsSending(false);
@@ -137,6 +171,7 @@ export function useGmailDrafts({ onDraftSaved, onDraftSent }: UseGmailDraftsProp
       setComposeSubject("");
       setComposeBody("");
       setAttachments([]);
+      setActiveDraftId(null);
       alert("Email sent successfully!");
       onDraftSent();
     } catch (err: unknown) {
@@ -178,8 +213,71 @@ export function useGmailDrafts({ onDraftSaved, onDraftSent }: UseGmailDraftsProp
   };
 
   const openCompose = () => {
+    setActiveDraftId(null);
+    setComposeTo("");
+    setComposeSubject("");
+    setComposeBody("");
+    setAttachments([]);
     setValidationErrors({});
     setIsComposeOpen(true);
+  };
+
+  const openComposeForDraft = async (msg: GmailMessage) => {
+    setValidationErrors({});
+    setActiveDraftId(msg.draftId || null);
+    setComposeTo(getHeader(msg, "to") || "");
+    setComposeSubject(getHeader(msg, "subject") || "");
+    setComposeBody(getMessageBody(msg.payload) || "");
+    setIsComposeOpen(true);
+
+    const msgAttachments = getAttachments(msg);
+    if (msgAttachments.length > 0) {
+      setAttachments(
+        msgAttachments.map((att) => ({
+          filename: att.filename,
+          mimeType: att.mimeType,
+          size: att.size,
+          content: "",
+        }))
+      );
+
+      const loadedAttachments = await Promise.all(
+        msgAttachments.map(async (att) => {
+          try {
+            const res = await fetch(
+              `/api/gmail/attachment?messageId=${att.messageId}&attachmentId=${att.attachmentId}&filename=${encodeURIComponent(
+                att.filename
+              )}`
+            );
+            if (!res.ok) throw new Error("Failed to fetch attachment content");
+            const arrayBuffer = await res.arrayBuffer();
+            const bytes = new Uint8Array(arrayBuffer);
+            let binary = "";
+            for (let i = 0; i < bytes.byteLength; i++) {
+              binary += String.fromCharCode(bytes[i]);
+            }
+            const base64 = btoa(binary);
+            return {
+              filename: att.filename,
+              mimeType: att.mimeType,
+              size: att.size,
+              content: base64,
+            };
+          } catch (err) {
+            console.error(`Error loading attachment content for draft:`, err);
+            return {
+              filename: att.filename,
+              mimeType: att.mimeType,
+              size: att.size,
+              content: "",
+            };
+          }
+        })
+      );
+      setAttachments(loadedAttachments);
+    } else {
+      setAttachments([]);
+    }
   };
 
   return {
@@ -198,9 +296,11 @@ export function useGmailDrafts({ onDraftSaved, onDraftSent }: UseGmailDraftsProp
     isSavingDraft,
     isSending,
     sendingDraftId,
+    activeDraftId,
     handleSaveDraft,
     handleSendDraft,
     handleSendCompose,
     openCompose,
+    openComposeForDraft,
   };
 }

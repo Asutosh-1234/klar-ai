@@ -42,3 +42,8 @@ export type CorsairEntity = Prisma.CorsairEntityModel
  * 
  */
 export type CorsairEvent = Prisma.CorsairEventModel
+/**
+ * Model Email
+ * 
+ */
+export type Email = Prisma.EmailModel

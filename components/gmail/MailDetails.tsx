@@ -1,7 +1,7 @@
 'use client'
 
 import * as React from "react";
-import { getHeader, getSenderInitials, formatDate, getMessageBody, getSenderName } from "@/lib/utils/gmail";
+import { getHeader, getSenderInitials, formatDate, getMessageBody, getSenderName, getAttachments } from "@/lib/utils/gmail";
 import { 
   GmailMessage, 
   MailActionBarProps, 
@@ -25,7 +25,7 @@ const getIframeSrcDoc = (msg: GmailMessage) => {
           <style>
             html {
               filter: invert(0.9) hue-rotate(180deg);
-              background-color: transparent !important;
+              background-color: #FAF9FB !important;
               color: #202020 !important;
               transition: color 0.15s ease, background-color 0.15s ease;
             }
@@ -35,8 +35,6 @@ const getIframeSrcDoc = (msg: GmailMessage) => {
               padding: 12px;
               line-height: 1.6;
               font-size: 15px;
-              background-color: transparent !important;
-              color: #FAF9FB !important;
             }
             a { color: #8B5CF6 !important; }
             img, svg, video, [style*="background-image"] {
@@ -85,6 +83,7 @@ export function MailActionBar({
   draftId,
   sendingDraftId,
   onSendDraft,
+  onEditDraft,
   isArchived = false,
 }: MailActionBarProps) {
   return (
@@ -136,15 +135,25 @@ export function MailActionBar({
 
       <div className="flex items-center gap-3">
         {draftId && (
-          <button
-            type="button"
-            onClick={() => onSendDraft(draftId)}
-            disabled={sendingDraftId === draftId}
-            className="px-4 py-1.5 bg-primary hover:bg-primary/90 text-white text-[11px] font-semibold rounded-full transition-all duration-200 flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer shadow-[0_0_15px_rgba(139,92,246,0.25)]"
-          >
-            <span className="material-symbols-outlined text-xs">send</span>
-            {sendingDraftId === draftId ? "Sending..." : "Send Draft"}
-          </button>
+          <>
+            <button
+              type="button"
+              onClick={onEditDraft}
+              className="px-4 py-1.5 bg-white/10 hover:bg-white/15 text-white text-[11px] font-semibold rounded-full transition-all duration-200 flex items-center gap-1.5 cursor-pointer"
+            >
+              <span className="material-symbols-outlined text-xs">edit</span>
+              Edit Draft
+            </button>
+            <button
+              type="button"
+              onClick={() => onSendDraft(draftId)}
+              disabled={sendingDraftId === draftId}
+              className="px-4 py-1.5 bg-primary hover:bg-primary/90 text-white text-[11px] font-semibold rounded-full transition-all duration-200 flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer shadow-[0_0_15px_rgba(139,92,246,0.25)]"
+            >
+              <span className="material-symbols-outlined text-xs">send</span>
+              {sendingDraftId === draftId ? "Sending..." : "Send Draft"}
+            </button>
+          </>
         )}
         <button className="material-symbols-outlined text-on-surface-variant hover:text-primary transition-colors text-xl cursor-pointer">
           more_vert
@@ -194,6 +203,26 @@ export function MailBody({
   message,
   handleIframeLoad,
 }: MailBodyProps) {
+  const attachments = getAttachments(message);
+
+  const getFileIcon = (mimeType: string) => {
+    if (mimeType.startsWith("image/")) return "image";
+    if (mimeType.startsWith("video/")) return "video_file";
+    if (mimeType.startsWith("audio/")) return "audiotrack";
+    if (mimeType.includes("pdf")) return "picture_as_pdf";
+    if (mimeType.includes("zip") || mimeType.includes("tar") || mimeType.includes("rar")) return "folder_zip";
+    if (mimeType.includes("text/")) return "description";
+    return "attach_file";
+  };
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return "0 B";
+    const k = 1024;
+    const sizes = ["B", "KB", "MB", "GB"];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + " " + sizes[i];
+  };
+
   return (
     <div className="flex-1 overflow-y-auto custom-scrollbar p-6 md:p-8 flex flex-col items-center">
       {/* Main Content Card */}
@@ -205,6 +234,39 @@ export function MailBody({
           className="w-full min-h-[300px] border-0 bg-transparent transition-all duration-300"
           sandbox="allow-popups allow-same-origin"
         />
+
+        {attachments.length > 0 && (
+          <div className="mt-8 pt-6 border-t border-white/5">
+            <h4 className="text-[10px] font-bold text-primary uppercase tracking-widest mb-3">
+              Attachments ({attachments.length})
+            </h4>
+            <div className="flex flex-wrap gap-3">
+              {attachments.map((file, idx) => (
+                <a
+                  key={idx}
+                  href={`/api/gmail/attachment?messageId=${file.messageId}&attachmentId=${file.attachmentId}&filename=${encodeURIComponent(file.filename)}`}
+                  download={file.filename}
+                  className="flex items-center gap-3 bg-[#12121A]/80 border border-white/5 rounded-xl px-3.5 py-2 hover:bg-[#12121A] hover:border-primary/30 transition-all cursor-pointer group/att"
+                >
+                  <span className="material-symbols-outlined text-[18px] text-primary shrink-0">
+                    {getFileIcon(file.mimeType)}
+                  </span>
+                  <div className="flex flex-col min-w-0 pr-1">
+                    <span className="text-xs text-white font-medium truncate max-w-section-gap" title={file.filename}>
+                      {file.filename}
+                    </span>
+                    <span className="text-[10px] text-on-surface-variant/50">
+                      {formatFileSize(file.size)}
+                    </span>
+                  </div>
+                  <span className="material-symbols-outlined text-[16px] text-on-surface-variant/50 group-hover/att:text-primary transition-colors shrink-0">
+                    download
+                  </span>
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -238,6 +300,7 @@ export function MailDetails({
   message,
   sendingDraftId,
   onSendDraft,
+  onEditDraft,
   onClose,
   onArchive,
   onDelete,
@@ -316,6 +379,7 @@ export function MailDetails({
         draftId={message.draftId || null}
         sendingDraftId={sendingDraftId}
         onSendDraft={onSendDraft}
+        onEditDraft={() => onEditDraft?.(message)}
         isArchived={isArchived}
       />
 

@@ -62,6 +62,17 @@ export const createDraft = async (tenantId: string, rawMime: string, threadId?: 
   });
 }
 
+export const updateDraft = async (tenantId: string, draftId: string, rawMime: string) => {
+  return await corsair.withTenant(tenantId).gmail.api.drafts.update({
+    id: draftId,
+    draft: {
+      message: {
+        raw: rawMime
+      }
+    }
+  });
+}
+
 export const sendDraft = async (tenantId: string, draftId: string) => {
   return await corsair.withTenant(tenantId).gmail.api.drafts.send({
     id: draftId

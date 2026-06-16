@@ -76,3 +76,39 @@ export const formatDate = (dateVal: string | number | undefined) => {
   }
   return d.toLocaleDateString([], { month: 'short', day: 'numeric' });
 };
+
+export interface AttachmentInfo {
+  filename: string;
+  mimeType: string;
+  size: number;
+  attachmentId: string;
+  messageId: string;
+}
+
+export const getAttachments = (msg: GmailMessage): AttachmentInfo[] => {
+  const attachments: AttachmentInfo[] = [];
+
+  const traverse = (part: GmailMessagePart) => {
+    if (!part) return;
+    if (part.filename && part.body?.attachmentId) {
+      attachments.push({
+        filename: part.filename,
+        mimeType: part.mimeType || "application/octet-stream",
+        size: part.body.size || 0,
+        attachmentId: part.body.attachmentId,
+        messageId: msg.id || "",
+      });
+    }
+    if (part.parts) {
+      for (const p of part.parts) {
+        traverse(p);
+      }
+    }
+  };
+
+  if (msg.payload) {
+    traverse(msg.payload as GmailMessagePart);
+  }
+
+  return attachments;
+};
