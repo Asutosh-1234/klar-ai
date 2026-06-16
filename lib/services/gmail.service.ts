@@ -2,6 +2,9 @@ import { corsair } from "@/corsair";
 import type { GmailServiceTypes } from "@/lib/types";
 
 export const getAllMails = async (params: GmailServiceTypes) => {
+  if (!params.userId && !params.pageToken && !params.includeSpamTrash && !params.labelIds) {
+    throw new Error("input required");
+  }
   const mails = await corsair.withTenant(params.tenentId).gmail.api.messages.list({
     userId: params.userId,
     q: params.q,

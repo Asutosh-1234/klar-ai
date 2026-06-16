@@ -13,18 +13,19 @@ export async function GET(request: NextRequest) {
     const q = searchParams.get("q") || undefined;
     const maxResults = searchParams.get("maxResults") ? parseInt(searchParams.get("maxResults")!) : 20;
 
-    // Call service to get message list
     const messages = await getAllMails({ 
+      userId: "me",
       tenentId: tenantId, 
       q, 
-      maxResults 
+      maxResults,
+      includeSpamTrash: true,
+      labelIds: ["INBOX"]
     });
 
     if (!messages || messages.length === 0) {
       return NextResponse.json({ messages: [] });
     }
 
-    // Enrich messages by fetching full detail for each message
     const enrichedMessages = await Promise.all(
       messages.map(async (msg: { id?: string | null; threadId?: string | null }) => {
         if (!msg.id) return null;
@@ -39,9 +40,20 @@ export async function GET(request: NextRequest) {
     );
 
     return NextResponse.json({
-      messages: enrichedMessages.filter(Boolean)
+      messages: enrichedMessages.filter(Boolean),
+      connected: true
     });
-  } catch (error: unknown) {
+  } catch (error: any) {
+    const isAuthMissing =
+      error?.name === "AuthMissingError" ||
+      error?.message?.includes("auth-missing") ||
+      error?.pluginId === "gmail" ||
+      (typeof error === "object" && error !== null && "pluginId" in error);
+
+    if (isAuthMissing) {
+      return NextResponse.json({ messages: [], connected: false });
+    }
+
     console.error("Error in GET /api/gmail:", error);
     const errorMessage = error instanceof Error ? error.message : String(error);
     return NextResponse.json({ error: errorMessage }, { status: 500 });

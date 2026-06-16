@@ -28,8 +28,18 @@ export async function GET(request: NextRequest) {
       events = await getAllEvents(tenantId, timeMin, timeMax);
     }
 
-    return NextResponse.json({ events });
-  } catch (error: unknown) {
+    return NextResponse.json({ events, connected: true });
+  } catch (error: any) {
+    const isAuthMissing =
+      error?.name === "AuthMissingError" ||
+      error?.message?.includes("auth-missing") ||
+      error?.pluginId === "googlecalendar" ||
+      (typeof error === "object" && error !== null && "pluginId" in error);
+
+    if (isAuthMissing) {
+      return NextResponse.json({ events: [], connected: false });
+    }
+
     console.error("Error in GET /api/calendar:", error);
     const errorMessage = error instanceof Error ? error.message : String(error);
     return NextResponse.json({ error: errorMessage }, { status: 500 });
@@ -55,7 +65,17 @@ export async function POST(request: NextRequest) {
 
     const created = await createEvent(tenantId, event);
     return NextResponse.json({ success: true, event: created });
-  } catch (error: unknown) {
+  } catch (error: any) {
+    const isAuthMissing =
+      error?.name === "AuthMissingError" ||
+      error?.message?.includes("auth-missing") ||
+      error?.pluginId === "googlecalendar" ||
+      (typeof error === "object" && error !== null && "pluginId" in error);
+
+    if (isAuthMissing) {
+      return NextResponse.json({ error: "auth-missing", connected: false }, { status: 400 });
+    }
+
     console.error("Error in POST /api/calendar:", error);
     const errorMessage = error instanceof Error ? error.message : String(error);
     return NextResponse.json({ error: errorMessage }, { status: 500 });
@@ -78,7 +98,17 @@ export async function PATCH(request: NextRequest) {
 
     const updated = await updateEvent(tenantId, id, event);
     return NextResponse.json({ success: true, event: updated });
-  } catch (error: unknown) {
+  } catch (error: any) {
+    const isAuthMissing =
+      error?.name === "AuthMissingError" ||
+      error?.message?.includes("auth-missing") ||
+      error?.pluginId === "googlecalendar" ||
+      (typeof error === "object" && error !== null && "pluginId" in error);
+
+    if (isAuthMissing) {
+      return NextResponse.json({ error: "auth-missing", connected: false }, { status: 400 });
+    }
+
     console.error("Error in PATCH /api/calendar:", error);
     const errorMessage = error instanceof Error ? error.message : String(error);
     return NextResponse.json({ error: errorMessage }, { status: 500 });
@@ -101,7 +131,17 @@ export async function DELETE(request: NextRequest) {
 
     await deleteEvent(tenantId, id);
     return NextResponse.json({ success: true });
-  } catch (error: unknown) {
+  } catch (error: any) {
+    const isAuthMissing =
+      error?.name === "AuthMissingError" ||
+      error?.message?.includes("auth-missing") ||
+      error?.pluginId === "googlecalendar" ||
+      (typeof error === "object" && error !== null && "pluginId" in error);
+
+    if (isAuthMissing) {
+      return NextResponse.json({ error: "auth-missing", connected: false }, { status: 400 });
+    }
+
     console.error("Error in DELETE /api/calendar:", error);
     const errorMessage = error instanceof Error ? error.message : String(error);
     return NextResponse.json({ error: errorMessage }, { status: 500 });

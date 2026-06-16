@@ -27,6 +27,7 @@ export function AetherCalendarView() {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [events, setEvents] = useState<GoogleEvent[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isConnected, setIsConnected] = useState<boolean | null>(null);
 
   // Modal State for creating an event
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -81,6 +82,16 @@ export function AetherCalendarView() {
       if (res.ok) {
         const data = await res.json();
         setEvents(data.events || []);
+        setIsConnected(data.connected !== false);
+      } else {
+        try {
+          const errData = await res.json();
+          if (errData.connected === false) {
+            setIsConnected(false);
+          }
+        } catch {
+          // ignore
+        }
       }
     } catch (err) {
       console.error('Failed to fetch calendar events:', err);
@@ -191,6 +202,64 @@ export function AetherCalendarView() {
   };
 
   const activeEvents = events;
+
+  if (loading) {
+    return (
+      <div className="flex-1 flex items-center justify-center bg-surface-container-lowest text-on-surface">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-8 h-8 border-2 border-primary/20 border-t-primary rounded-full animate-spin"></div>
+          <span className="text-[10px] font-bold tracking-widest uppercase text-on-surface-variant/40">Synchronizing Schedule...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (isConnected === false) {
+    return (
+      <div className="flex-1 flex flex-col items-center justify-center p-6 bg-surface-container-lowest text-on-surface text-center relative h-full">
+        <div className="absolute inset-0 bg-grid-pattern pointer-events-none opacity-40"></div>
+        <div className="relative max-w-md w-full glass-card rounded-2xl p-8 flex flex-col items-center z-10">
+          <div className="w-16 h-16 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary mb-6 gold-glow animate-pulse">
+            <span className="material-symbols-outlined text-3xl">calendar_today</span>
+          </div>
+          <h2 className="text-sm font-bold text-white mb-2 tracking-tight uppercase">
+            Connect Google Calendar
+          </h2>
+          <p className="text-on-surface-variant text-[11px] leading-relaxed mb-6 font-normal">
+            Enable Klar AI to schedule, list, and modify events on your primary calendar. Synchronize your agenda for optimal focus blocks and workflow recommendations.
+          </p>
+
+          <div className="w-full border-t border-white/5 pt-5 mb-6 text-left">
+            <h4 className="text-[9px] font-bold text-white uppercase tracking-wider mb-3 opacity-60">
+              Requested Permissions:
+            </h4>
+            <ul className="space-y-2">
+              <li className="flex items-start gap-2 text-[10px] text-on-surface-variant font-normal">
+                <span className="material-symbols-outlined text-primary text-xs shrink-0">check_circle</span>
+                <span>View your calendar schedule and event details</span>
+              </li>
+              <li className="flex items-start gap-2 text-[10px] text-on-surface-variant font-normal">
+                <span className="material-symbols-outlined text-primary text-xs shrink-0">check_circle</span>
+                <span>Create, edit, and delete calendar invites</span>
+              </li>
+              <li className="flex items-start gap-2 text-[10px] text-on-surface-variant font-normal">
+                <span className="material-symbols-outlined text-primary text-xs shrink-0">check_circle</span>
+                <span>Manage invitations and attendee response lists</span>
+              </li>
+            </ul>
+          </div>
+
+          <a
+            href="/api/connect?plugin=googlecalendar"
+            className="w-full py-2.5 bg-primary hover:brightness-110 active:scale-[0.98] transition-all text-background rounded-lg text-xs font-bold flex items-center justify-center gap-2 shadow-[0_4px_16px_rgba(242,202,80,0.2)] hover:shadow-[0_6px_20px_rgba(242,202,80,0.3)] cursor-pointer"
+          >
+            <span className="material-symbols-outlined text-xs font-bold">link</span>
+            Connect Google Calendar
+          </a>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex-1 flex overflow-hidden h-full bg-surface-container-lowest text-on-surface">
