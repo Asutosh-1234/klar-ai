@@ -36,6 +36,15 @@ export async function GET(request: NextRequest) {
         if (!msg.id) return null;
         try {
           const fullMsg = await getMessageDetails(tenantId, msg.id);
+          if (fullMsg && fullMsg.labelIds) {
+            const isTrash = fullMsg.labelIds.includes("TRASH");
+            const isSpam = fullMsg.labelIds.includes("SPAM");
+            const isTrashQuery = q && (q.includes("label:TRASH") || q.includes("in:trash"));
+            const isSpamQuery = q && (q.includes("label:SPAM") || q.includes("in:spam"));
+
+            if (isTrash && !isTrashQuery) return null;
+            if (isSpam && !isSpamQuery) return null;
+          }
           return fullMsg;
         } catch (err) {
           console.error(`Failed to get details for message ${msg.id}:`, err);
