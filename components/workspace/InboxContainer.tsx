@@ -367,6 +367,7 @@ export function InboxContainer({ user }: InboxContainerProps) {
                 unarchiveMessages={unarchiveMessages}
                 isSplitView={isSplitView}
                 onEditDraft={openComposeForDraft}
+                onRefresh={() => fetchEmails(searchQuery)}
               />
 
               {/* Email Details Pane */}

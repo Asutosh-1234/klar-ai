@@ -97,6 +97,7 @@ export interface MailListProps {
   unarchiveMessages: (ids: string[]) => void;
   isSplitView: boolean;
   onEditDraft?: (msg: GmailMessage) => void;
+  onRefresh?: () => void;
 }
 
 

@@ -26,6 +26,7 @@ export function MailList({
   unarchiveMessages,
   isSplitView,
   onEditDraft,
+  onRefresh,
 }: MailListProps) {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const headerCheckboxRef = useRef<HTMLInputElement>(null);
@@ -183,7 +184,13 @@ export function MailList({
             </div>
           ) : (
             <>
-              <button className="material-symbols-outlined text-[20px] hover:text-white cursor-pointer">refresh</button>
+              <button
+                onClick={onRefresh}
+                title="Refresh"
+                className={`material-symbols-outlined text-[20px] hover:text-white cursor-pointer ${loading ? 'animate-spin text-primary' : ''}`}
+              >
+                refresh
+              </button>
               <button className="material-symbols-outlined text-[20px] hover:text-white cursor-pointer">more_vert</button>
             </>
           )}
