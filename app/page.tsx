@@ -2,6 +2,7 @@ import { Navbar } from "@/components/Navbar";
 import { Hero } from "@/components/Hero";
 import { SocialProof } from "@/components/SocialProof";
 import { Features } from "@/components/Features";
+import { ShortcutsOverview } from "@/components/ShortcutsOverview";
 import { CTA } from "@/components/CTA";
 import { Pricing } from "@/components/Pricing";
 import { Footer } from "@/components/Footer";
@@ -19,6 +20,7 @@ export default async function Home() {
         <Hero session={session} />
         <SocialProof />
         <Features />
+        <ShortcutsOverview />
         <CTA session={session} />
         <Pricing />
       </main>
@@ -26,3 +28,4 @@ export default async function Home() {
     </div>
   );
 }
+

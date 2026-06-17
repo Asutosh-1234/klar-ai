@@ -107,7 +107,7 @@ export function ShortcutsHelpModal({ isOpen, onClose }: ShortcutsHelpModalProps)
             <h4 className="text-[10px] font-bold text-primary uppercase tracking-widest mb-3 opacity-80">Global Actions</h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3">
               <ShortcutRow label="Compose New Email">
-                <KeyBadge size="md">c</KeyBadge>
+                <KeyBadge size="md">n</KeyBadge>
               </ShortcutRow>
 
               <ShortcutRow label="Toggle Help Dialog">

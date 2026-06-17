@@ -22,6 +22,7 @@ export function Navbar({ session }: NavbarProps) {
         <div className="hidden md:flex gap-8 items-center">
           <a className="text-on-surface-variant hover:text-primary transition-colors duration-200" href="#">Product</a>
           <a className="text-on-surface-variant hover:text-primary transition-colors duration-200" href="#features">Features</a>
+          <a className="text-on-surface-variant hover:text-primary transition-colors duration-200" href="#shortcuts">Shortcuts</a>
           <a className="text-on-surface-variant hover:text-primary transition-colors duration-200" href="#pricing">Pricing</a>
           {isLoggedIn && (
             <>

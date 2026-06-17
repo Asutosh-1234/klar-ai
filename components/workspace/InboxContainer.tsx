@@ -185,7 +185,7 @@ export function InboxContainer({ user }: InboxContainerProps) {
       }
 
       // 3. Single key action shortcuts
-      if (key === "c") {
+      if (key === "n") {
         e.preventDefault();
         openCompose();
         return;
@@ -323,21 +323,34 @@ export function InboxContainer({ user }: InboxContainerProps) {
                 </button>
               </div>
             )}
-            <button 
-              onClick={() => {
-                setSelectedFolder("SETTINGS");
-                setSelectedMessage(null);
-              }}
-              className="hover:text-primary transition-colors material-symbols-outlined cursor-pointer"
-            >
-              settings
-            </button>
-            <button 
-              onClick={() => setIsHelpOpen(true)}
-              className="hover:text-primary transition-colors material-symbols-outlined cursor-pointer"
-            >
-              help
-            </button>
+            <div className="relative group flex items-center justify-center">
+              <button 
+                onClick={() => {
+                  setSelectedFolder("SETTINGS");
+                  setSelectedMessage(null);
+                }}
+                className="hover:text-primary transition-colors material-symbols-outlined cursor-pointer p-1"
+              >
+                settings
+              </button>
+              <div className="absolute top-full right-0 mt-2 hidden group-hover:flex bg-surface-sidebar border border-white/10 text-[10px] px-2 py-1 rounded shadow-xl whitespace-nowrap font-mono z-50 flex-col gap-0.5 items-end">
+                <span className="text-on-surface font-semibold text-[9px]">Settings</span>
+                <span className="text-primary text-[8px]">Ctrl+O / g+o</span>
+              </div>
+            </div>
+            
+            <div className="relative group flex items-center justify-center">
+              <button 
+                onClick={() => setIsHelpOpen(true)}
+                className="hover:text-primary transition-colors material-symbols-outlined cursor-pointer p-1"
+              >
+                help
+              </button>
+              <div className="absolute top-full right-0 mt-2 hidden group-hover:flex bg-surface-sidebar border border-white/10 text-[10px] px-2 py-1 rounded shadow-xl whitespace-nowrap font-mono z-50 flex-col gap-0.5 items-end">
+                <span className="text-on-surface font-semibold text-[9px]">Shortcuts Help</span>
+                <span className="text-primary text-[8px]">? / h</span>
+              </div>
+            </div>
           </div>
         </header>
 

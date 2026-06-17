@@ -4,6 +4,21 @@ import Link from 'next/link';
 import { signOut } from 'next-auth/react';
 import { InboxSidebarProps } from '@/lib/types';
 
+function getShortcutString(folderId: string): string {
+  switch (folderId) {
+    case "INBOX": return "Ctrl+I / g+i";
+    case "STARRED": return "Ctrl+S / g+s";
+    case "SENT": return "Ctrl+E / g+e";
+    case "DRAFT": return "Ctrl+D / g+d";
+    case "ARCHIVE": return "g+r";
+    case "PURCHASES": return "Ctrl+P / g+p";
+    case "CALENDAR": return "Ctrl+C / g+c";
+    case "AGENTS": return "Ctrl+A / g+a";
+    case "SETTINGS": return "Ctrl+O / g+o";
+    default: return "";
+  }
+}
+
 export function InboxSidebar({
   user,
   selectedFolder,
@@ -36,10 +51,13 @@ export function InboxSidebar({
       <div className="px-6 mb-6">
         <button
           onClick={onComposeClick}
-          className="w-full py-3 bg-primary-container text-white rounded-lg font-semibold flex items-center justify-center gap-2 hover:brightness-110 transition-all duration-200 active:scale-95 shadow-[0_0_20px_rgba(242,202,80,0.1)] cursor-pointer"
+          className="w-full py-3 bg-primary-container text-white rounded-lg font-semibold flex items-center justify-center gap-2 hover:brightness-110 transition-all duration-200 active:scale-95 shadow-[0_0_20px_rgba(242,202,80,0.1)] cursor-pointer relative group"
         >
           <span className="material-symbols-outlined text-[20px] font-semibold">add</span>
           <span className="font-label-md text-xs">Compose</span>
+          <div className="absolute right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center bg-black/40 text-primary px-1.5 py-0.5 rounded text-[8px] font-mono border border-white/10 select-none">
+            N
+          </div>
         </button>
       </div>
 
@@ -51,7 +69,7 @@ export function InboxSidebar({
             <button
               key={folder.id}
               onClick={() => setSelectedFolder(folder.id)}
-              className={`w-full flex items-center px-6 py-3 transition-colors duration-200 text-left text-xs cursor-pointer ${
+              className={`w-full flex items-center px-6 py-3 transition-colors duration-200 text-left text-xs cursor-pointer relative group ${
                 isActive
                   ? "text-on-surface font-semibold border-l-2 border-primary bg-surface-container-high"
                   : "text-on-surface-variant hover:text-on-surface hover:bg-surface-container-highest"
@@ -64,6 +82,9 @@ export function InboxSidebar({
                 {folder.icon}
               </span>
               <span className="font-label-md text-xs">{folder.label}</span>
+              <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center gap-1 bg-white/10 text-primary px-1.5 py-0.5 rounded text-[8px] font-mono border border-white/5 shrink-0 ml-auto select-none">
+                {getShortcutString(folder.id)}
+              </div>
             </button>
           );
         })}

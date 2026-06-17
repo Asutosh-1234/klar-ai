@@ -89,13 +89,19 @@ export function MailActionBar({
   return (
     <div className="h-12 px-6 flex items-center justify-between border-b border-white/5 shrink-0 bg-[#0A0A0F] z-10">
       <div className="flex items-center gap-6">
-        <button
-          onClick={onClose}
-          className="material-symbols-outlined text-on-surface-variant hover:text-primary transition-colors cursor-pointer"
-          title="Back"
-        >
-          arrow_back
-        </button>
+        <div className="relative group flex items-center justify-center">
+          <button
+            onClick={onClose}
+            className="material-symbols-outlined text-on-surface-variant hover:text-primary transition-colors cursor-pointer p-1"
+            title="Back"
+          >
+            arrow_back
+          </button>
+          <div className="absolute top-full left-0 mt-2 hidden group-hover:flex bg-surface-sidebar border border-white/10 text-[10px] px-2 py-1 rounded shadow-xl whitespace-nowrap font-mono z-50 flex-col gap-0.5 items-start">
+            <span className="text-on-surface font-semibold text-[9px]">Close Panel</span>
+            <span className="text-primary text-[8px]">Esc</span>
+          </div>
+        </div>
         
         <div className="flex items-center gap-4">
           <button
