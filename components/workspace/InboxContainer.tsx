@@ -296,7 +296,7 @@ export function InboxContainer({ user }: InboxContainerProps) {
           ) : selectedFolder === "PURCHASES" ? (
             <AetherPurchasesView />
           ) : selectedFolder === "AGENTS" ? (
-            <AetherAgentsView />
+            <AetherAgentsView user={user} />
           ) : selectedFolder === "SETTINGS" ? (
             <AetherSettingsView />
           ) : (
