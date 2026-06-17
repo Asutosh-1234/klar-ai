@@ -79,6 +79,83 @@ const SPECIALISTS: Specialist[] = [
   }
 ];
 
+function FormattedText({ text }: { text: string }) {
+  if (!text) return null;
+  const lines = text.split("\n");
+
+  return (
+    <div className="space-y-1.5">
+      {lines.map((line, idx) => {
+        let content = line;
+
+        // Pattern for bold text: **text**
+        const boldRegex = /\*\*(.*?)\*\*/g;
+        const parts = [];
+        let lastIndex = 0;
+        let match;
+
+        while ((match = boldRegex.exec(content)) !== null) {
+          if (match.index > lastIndex) {
+            parts.push(content.substring(lastIndex, match.index));
+          }
+          parts.push(
+            <strong key={match.index} className="text-white font-bold">
+              {match[1]}
+            </strong>
+          );
+          lastIndex = boldRegex.lastIndex;
+        }
+        if (lastIndex < content.length) {
+          parts.push(content.substring(lastIndex));
+        }
+
+        const renderedContent = parts.length > 0 ? parts : content;
+
+        // Check if bullet point (- or *)
+        if (line.startsWith("- ") || line.startsWith("* ")) {
+          const listText = line.substring(2);
+          const listParts = [];
+          let listLastIndex = 0;
+          let listMatch;
+
+          while ((listMatch = boldRegex.exec(listText)) !== null) {
+            if (listMatch.index > listLastIndex) {
+              listParts.push(listText.substring(listLastIndex, listMatch.index));
+            }
+            listParts.push(
+              <strong key={listMatch.index} className="text-white font-bold">
+                {listMatch[1]}
+              </strong>
+            );
+            listLastIndex = boldRegex.lastIndex;
+          }
+          if (listLastIndex < listText.length) {
+            listParts.push(listText.substring(listLastIndex));
+          }
+
+          return (
+            <ul key={idx} className="list-disc pl-5 my-0.5 space-y-1">
+              <li className="text-on-surface-variant font-normal text-xs leading-relaxed">
+                {listParts.length > 0 ? listParts : listText}
+              </li>
+            </ul>
+          );
+        }
+
+        if (line.trim() === "") {
+          return <div key={idx} className="h-1.5" />;
+        }
+
+        return (
+          <p key={idx} className="text-xs text-on-surface leading-relaxed font-normal">
+            {renderedContent}
+          </p>
+        );
+      })}
+    </div>
+  );
+}
+
 export function AetherAgentsView({ user }: AetherAgentsViewProps) {
   const [activeId, setActiveId] = useState<'strategy' | 'calendar' | 'mail'>('strategy');
   const [searchQuery, setSearchQuery] = useState("");
@@ -156,55 +233,115 @@ export function AetherAgentsView({ user }: AetherAgentsViewProps) {
 
     setLoading(true);
 
+    const history = (messages[activeId] || [])
+      .filter(m => !m.id.startsWith("init-") && m.text.trim() !== "")
+      .map(m => ({
+        role: m.sender === 'user' ? 'user' as const : 'assistant' as const,
+        content: m.text
+      }));
+
     try {
       const res = await fetch("/api/agents/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           specialistId: activeId,
-          message: userText
+          message: userText,
+          history
         })
       });
 
-      if (res.ok) {
-        const data = await res.json();
-        const aiMsg: ChatMessage = {
-          id: `ai-${Date.now()}`,
-          sender: 'ai',
-          text: data.text,
-          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          proposedStep: data.proposedStep
-        };
+      if (!res.ok) {
+        throw new Error(`Server returned status ${res.status}`);
+      }
 
-        setMessages(prev => ({
-          ...prev,
-          [activeId]: [...prev[activeId], aiMsg]
-        }));
-      } else {
-        const errText = await res.text();
-        const errorMsg: ChatMessage = {
-          id: `err-${Date.now()}`,
+      const reader = res.body?.getReader();
+      if (!reader) {
+        throw new Error("No response stream reader available.");
+      }
+
+      const decoder = new TextDecoder();
+      let done = false;
+      let buffer = "";
+
+      const aiMsgId = `ai-${Date.now()}`;
+      // Add initial empty message
+      setMessages(prev => ({
+        ...prev,
+        [activeId]: [...prev[activeId], {
+          id: aiMsgId,
           sender: 'ai',
-          text: `Error: ${errText || "Unable to retrieve response from agent."}`,
+          text: "",
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-        };
-        setMessages(prev => ({
-          ...prev,
-          [activeId]: [...prev[activeId], errorMsg]
-        }));
+        }]
+      }));
+
+      // Set loading false since we started streaming the chunks
+      setLoading(false);
+
+      while (!done) {
+        const { value, done: doneReading } = await reader.read();
+        done = doneReading;
+        const chunk = decoder.decode(value || new Uint8Array(), { stream: !done });
+        buffer += chunk;
+
+        const lines = buffer.split("\n");
+        buffer = lines.pop() || "";
+
+        for (const line of lines) {
+          if (!line.trim()) continue;
+          try {
+            const parsed = JSON.parse(line);
+            if (parsed.type === "text") {
+              setMessages(prev => {
+                const list = prev[activeId].map(msg => {
+                  if (msg.id === aiMsgId) {
+                    return {
+                      ...msg,
+                      text: msg.text + parsed.content
+                    };
+                  }
+                  return msg;
+                });
+                return {
+                  ...prev,
+                  [activeId]: list
+                };
+              });
+            } else if (parsed.type === "proposedStep") {
+              setMessages(prev => {
+                const list = prev[activeId].map(msg => {
+                  if (msg.id === aiMsgId) {
+                    return {
+                      ...msg,
+                      proposedStep: parsed.content
+                    };
+                  }
+                  return msg;
+                });
+                return {
+                  ...prev,
+                  [activeId]: list
+                };
+              });
+            }
+          } catch (e) {
+            console.error("Error parsing NDJSON line:", e, line);
+          }
+        }
       }
     } catch (err: any) {
+      console.error("Chat streaming failed:", err);
       const errorMsg: ChatMessage = {
         id: `err-${Date.now()}`,
         sender: 'ai',
-        text: `Failed to connect: ${err.message || String(err)}`,
+        text: `Failed to connect or stream: ${err.message || String(err)}`,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       };
       setMessages(prev => ({
         ...prev,
         [activeId]: [...prev[activeId], errorMsg]
       }));
-    } finally {
       setLoading(false);
     }
   };
@@ -389,15 +526,13 @@ export function AetherAgentsView({ user }: AetherAgentsViewProps) {
                   {/* AI Content */}
                   <div className="flex-1 space-y-3">
                     <div className={`glass-panel p-5 rounded-2xl border-l-4 ${activeSpecialist.borderColor} relative overflow-hidden`}>
-                      <div className="absolute inset-0 bg-gradient-to-br from-primary/3 to-transparent opacity-10 pointer-events-none"></div>
-                      <p className="text-xs leading-relaxed text-on-surface whitespace-pre-wrap">
-                        {msg.text}
-                      </p>
+                      <div className="absolute inset-0 bg-linear-to-br from-primary/3 to-transparent opacity-10 pointer-events-none"></div>
+                      <FormattedText text={msg.text} />
                     </div>
 
                     {/* AI Action Card */}
                     {msg.proposedStep && (
-                      <div className="max-w-md bg-surface-sidebar border border-white/5 rounded-xl p-4 flex flex-col gap-3 relative overflow-hidden shadow-lg">
+                      <div className="max-w-md bg-surface-sidebar border border-white/5 rounded-xl p-4 flex flex-col gap-3 relative overflow-hidden shadow-lg animate-fade-in-up">
                         <div className="absolute inset-0 bg-grid-pattern opacity-5 pointer-events-none"></div>
                         
                         <div className="flex items-center gap-2">
@@ -446,9 +581,7 @@ export function AetherAgentsView({ user }: AetherAgentsViewProps) {
                 <div key={msg.id} className="w-full max-w-3xl flex gap-4 justify-end">
                   <div className="flex-1 flex flex-col items-end">
                     <div className="bg-surface-sidebar border border-white/5 px-5 py-3 rounded-2xl max-w-xl shadow-md">
-                      <p className="text-xs text-on-surface leading-relaxed">
-                        {msg.text}
-                      </p>
+                      <FormattedText text={msg.text} />
                     </div>
                     <span className="text-[9px] text-on-surface-variant/40 mt-1.5 mr-1 font-medium select-none">
                       Delivered • {msg.timestamp}

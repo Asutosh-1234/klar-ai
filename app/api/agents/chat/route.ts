@@ -1,8 +1,9 @@
 import { NextResponse, NextRequest } from "next/server";
 import { getServerSession } from "next-auth";
 import { authProvider } from "@/lib/auth/config";
-import { generateText } from "ai";
+import { streamText, tool, stepCountIs } from "ai";
 import { createOpenAI } from "@ai-sdk/openai";
+import { z } from "zod";
 import ENV from "@/lib/config/ENV";
 import {
   syncEmailsForUser,
@@ -10,6 +11,8 @@ import {
   searchEmailsVector,
   searchEventsVector
 } from "@/lib/services/agent-chat.service";
+import { getAllMails, getMessageDetails, createDraft, sendDraft } from "@/lib/services/gmail.service";
+import { getAllEvents, createEvent, deleteEvent } from "@/lib/services/calendar.service";
 
 const openrouter = createOpenAI({
   baseURL: "https://openrouter.ai/api/v1",
@@ -23,7 +26,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { specialistId, message } = await request.json();
+    const { specialistId, message, history } = await request.json();
     if (!specialistId || !message) {
       return NextResponse.json({ error: "Missing specialistId or message" }, { status: 400 });
     }
@@ -37,7 +40,7 @@ export async function POST(request: NextRequest) {
       syncEventsForUser(tenantId, userId)
     ]).catch(err => console.error("Sync in chat route failed:", err));
 
-    // 2. Query Vector DB depending on specialist type
+    // 2. Query Vector DB depending on specialist type to obtain initial context
     let context = "";
     if (specialistId === "mail" || specialistId === "strategy") {
       const emailMatches = await searchEmailsVector(userId, message, 3);
@@ -60,71 +63,283 @@ export async function POST(request: NextRequest) {
     }
 
     // 3. Build System Prompt
-    let specialistName = "Aether AI Lead";
     let systemPrompt = "";
 
+    const sharedInstructions = `
+
+GENERAL OPERATING PROCEDURES & AUTONOMOUS THINKING:
+- You MUST work autonomously using your own reasoning and thinking power.
+- When asked to perform actions (such as sending an email or setting up/creating calendar events), if the user has not specified a title/summary, email subject, or email body, do NOT ask the user for these details.
+- Instead, autonomously draft/generate appropriate, professional, and formal values for them:
+  - For email subjects and bodies: Write a complete, polite, and professionally formatted email maintaining all standard business/formal correspondence rules (greetings, sign-off, clear paragraphs, polite tone).
+  - For calendar events: Create an appropriate summary/title (e.g. "Meeting with [Name]" or "Discussion on [Topic]" or "Strategic Session") and set a logical duration (e.g. 1 hour starting at the requested time).
+- If the user provides a request containing multiple actions (e.g., "set an event at 6 pm today and send an email..."), you must call ALL relevant tools in succession during the same turn to fulfill the complete request. Do not ask for confirmation or extra information before executing.
+- Current local time context for relative date/time parsing (e.g., "today", "tomorrow"): ${new Date().toString()} (ISO: ${new Date().toISOString()})`;
+
     if (specialistId === "mail") {
-      specialistName = "Mail Analyst";
-      systemPrompt = `You are Aether's Mail Analyst. You have access to the user's emails via semantic search.
-Your role is to help the user query, summarize, search, and navigate their emails. 
-Be concise, professional, and elegant. 
-Always refer to details in the emails when answering.`;
+      systemPrompt = `You are Aether's Mail Analyst. You have access to Gmail tools (listEmails, sendEmail).
+Your role is to help the user query, summarize, search, and send emails.
+CRITICAL: You MUST use your tools (like sendEmail) to perform requested actions immediately. Do not say you are unable to perform them. Speak and act as a capable executive agent.${sharedInstructions}`;
     } else if (specialistId === "calendar") {
-      specialistName = "Scheduling Assistant";
-      systemPrompt = `You are Aether's Scheduling Assistant. You have access to the user's calendar events via semantic search.
-Your role is to help the user look up, structure, and check their schedules or resolve conflicts.
-Be concise, professional, and precise.`;
+      systemPrompt = `You are Aether's Scheduling Assistant. You have access to Google Calendar tools (listCalendarEvents, createCalendarEvent, deleteCalendarEvent).
+Your role is to help the user list, create, and delete calendar events.
+CRITICAL: You MUST use your tools (like createCalendarEvent or deleteCalendarEvent) to perform requested actions immediately. Do not say you are unable to perform them. When the user specifies a time like "today at 6 PM", parse this into the correct ISO start and end timestamps (e.g., today's date at 18:00 to 19:00) and call the create tool. Speak and act as a capable executive agent.${sharedInstructions}`;
     } else {
-      specialistName = "Strategy Lead";
       systemPrompt = `You are Aether's Strategy Lead. You coordinate information from both emails and calendar events.
-Help the user answer comprehensive questions about their schedules, messages, and upcoming planning.
-Be executive, strategic, concise, and professional.`;
+You have access to both Gmail and Google Calendar tools.
+Your role is to help the user search, summarize, schedule, send emails, or manage calendar events.
+CRITICAL: You MUST use your tools to perform requested actions immediately. Speak and act as a capable executive agent.${sharedInstructions}`;
     }
 
-    // If context was found, append it to system prompt
     if (context) {
       systemPrompt += `\n\nUse the following relevant context from the user's database to answer the user's request:\n${context}`;
-    } else {
-      systemPrompt += `\n\nNo matching documents found in the database. Prompt the user that they can ask to sync their Gmail or Calendar if they want more info.`;
     }
 
-    // 4. Generate Text Response
-    const response = await generateText({
-      model: openrouter("google/gemini-2.5-flash"),
-      maxOutputTokens: 1000,
-      system: systemPrompt,
-      prompt: message,
-    });
+    // 4. Define Specialist Tools dynamically
+    const tools: Record<string, any> = {};
 
-    // We can also extract proposed next steps from the AI output or construct them dynamically
+    if (specialistId === "mail" || specialistId === "strategy") {
+      tools.listEmails = tool({
+        description: "Search or list Gmail messages matching a query.",
+        parameters: z.object({
+          q: z.string().optional().describe("Gmail search query (e.g. 'from:Netflix')"),
+          maxResults: z.number().optional().default(10),
+        }),
+        execute: async ({ q, maxResults }: { q?: string; maxResults?: number }) => {
+          try {
+            const messages = await getAllMails({
+              userId: "me",
+              tenentId: tenantId,
+              q,
+              maxResults,
+              includeSpamTrash: true,
+              labelIds: ["INBOX"],
+            });
+            const enriched = await Promise.all(
+              messages.slice(0, 5).map(async (msg: any) => {
+                if (!msg.id) return null;
+                try {
+                  const details = await getMessageDetails(tenantId, msg.id);
+                  return {
+                    id: details.id,
+                    subject: details.payload?.headers?.find((h: any) => h.name === "Subject")?.value || "No Subject",
+                    sender: details.payload?.headers?.find((h: any) => h.name === "From")?.value || "Unknown",
+                    snippet: details.snippet,
+                  };
+                } catch {
+                  return null;
+                }
+              })
+            );
+            return { emails: enriched.filter(Boolean) };
+          } catch (e: any) {
+            return { error: e.message };
+          }
+        },
+      } as any);
+
+      tools.sendEmail = tool({
+        description: "Compose and send a new email to a recipient.",
+        parameters: z.object({
+          to: z.string().describe("Recipient email address"),
+          subject: z.string().describe("Email subject line"),
+          body: z.string().describe("Email body content (HTML or plain text)"),
+        }),
+        execute: async ({ to, subject, body }: { to: string; subject: string; body: string }) => {
+          console.log("[AGENT TOOL] sendEmail invoked:", { to, subject, body });
+          try {
+            const mimeMessage = [
+              `To: ${to}`,
+              `Subject: =?utf-8?B?${Buffer.from(subject).toString("base64")}?=`,
+              'Content-Type: text/html; charset="UTF-8"',
+              'MIME-Version: 1.0',
+              '',
+              body
+            ].join('\r\n');
+            const rawMime = Buffer.from(mimeMessage)
+              .toString("base64")
+              .replace(/\+/g, "-")
+              .replace(/\//g, "_")
+              .replace(/=+$/, "");
+
+            const draft = await createDraft(tenantId, rawMime);
+            if (!draft.id) {
+              throw new Error("Failed to create draft");
+            }
+            await sendDraft(tenantId, draft.id);
+            return { success: true, message: `Email sent to ${to}.` };
+          } catch (e: any) {
+            return { error: e.message };
+          }
+        },
+      } as any);
+    }
+
+    if (specialistId === "calendar" || specialistId === "strategy") {
+      tools.listCalendarEvents = tool({
+        description: "List calendar events for the user.",
+        parameters: z.object({
+          timeMin: z.string().optional().describe("ISO start time"),
+          timeMax: z.string().optional().describe("ISO end time"),
+        }),
+        execute: async ({ timeMin, timeMax }: { timeMin?: string; timeMax?: string }) => {
+          try {
+            const events = await getAllEvents(tenantId, timeMin, timeMax);
+            return {
+              events: events.map((e: any) => ({
+                id: e.id,
+                summary: e.summary,
+                description: e.description,
+                start: e.start,
+                end: e.end,
+              })),
+            };
+          } catch (e: any) {
+            return { error: e.message };
+          }
+        },
+      } as any);
+
+      tools.createCalendarEvent = tool({
+        description: "Create a new event in the Google calendar.",
+        parameters: z.object({
+          summary: z.string().optional().describe("Title of the event. Defaults to 'Meeting' if not specified."),
+          description: z.string().optional().describe("Optional description"),
+          startDateTime: z.string().optional().describe(
+            "The start date-time for the event in ISO 8601 format (e.g., '2026-06-17T18:00:00+05:30'). " +
+            "You MUST compute the exact date and time based on the current local time context provided in the system prompt. " +
+            "For example, if the current time is Wed Jun 17 2026 18:20:14 GMT+0530, and the user asks for '6 pm today', " +
+            "calculate the date '2026-06-17' and time '18:00:00', and format it with the offset: '2026-06-17T18:00:00+05:30'."
+          ),
+          endDateTime: z.string().optional().describe(
+            "The end date-time for the event in ISO 8601 format (e.g., '2026-06-17T19:00:00+05:30'). " +
+            "Must be after startDateTime. If no duration is specified, assume a 1-hour duration."
+          ),
+        }),
+        execute: async ({ summary, description, startDateTime, endDateTime }: { summary?: string; description?: string; startDateTime?: string; endDateTime?: string }) => {
+          console.log("[AGENT TOOL] createCalendarEvent invoked:", { summary, description, startDateTime, endDateTime });
+          try {
+            const formatISO = (dt?: string) => {
+              if (!dt) return new Date().toISOString();
+              try {
+                const parsed = new Date(dt);
+                return isNaN(parsed.getTime()) ? dt : parsed.toISOString();
+              } catch {
+                return dt;
+              }
+            };
+            const formatISOEnd = (dt?: string, startDt?: string) => {
+              if (!dt) {
+                const baseDate = startDt ? new Date(startDt) : new Date();
+                const end = new Date(baseDate.getTime() + 60 * 60 * 1000);
+                return end.toISOString();
+              }
+              try {
+                const parsed = new Date(dt);
+                return isNaN(parsed.getTime()) ? dt : parsed.toISOString();
+              } catch {
+                return dt;
+              }
+            };
+
+            const computedStart = formatISO(startDateTime);
+            const computedEnd = formatISOEnd(endDateTime, computedStart);
+
+            const created = await createEvent(tenantId, {
+              summary: summary || "Meeting",
+              ...(description ? { description } : {}),
+              start: { dateTime: computedStart },
+              end: { dateTime: computedEnd },
+            });
+            return { success: true, event: created };
+          } catch (e: any) {
+            return { error: e.message };
+          }
+        },
+      } as any);
+
+      tools.deleteCalendarEvent = tool({
+        description: "Delete an event from the calendar.",
+        parameters: z.object({
+          eventId: z.string().describe("The ID of the event to delete"),
+        }),
+        execute: async ({ eventId }: { eventId: string }) => {
+          try {
+            await deleteEvent(tenantId, eventId);
+            return { success: true, message: "Calendar event deleted." };
+          } catch (e: any) {
+            return { error: e.message };
+          }
+        },
+      } as any);
+    }
+
+    // 5. Determine Dynamic Proposed Next Step
     let proposedStep = null;
-    if (specialistId === "calendar" && message.toLowerCase().includes("schedule")) {
+    const lowerMessage = message.toLowerCase();
+    if (specialistId === "mail" && (lowerMessage.includes("send") || lowerMessage.includes("mail") || lowerMessage.includes("email") || lowerMessage.includes("draft"))) {
       proposedStep = {
-        title: "Create Calendar Event",
-        description: "Schedule a regional expansion briefing with regional directors.",
-        primaryAction: "Create Event",
-        secondaryAction: "Edit Time"
+        title: "Verify Sent Mail",
+        description: "Review if the email was delivered successfully and verify details in your Sent folder.",
+        primaryAction: "Verify Delivery",
+        secondaryAction: "Dismiss"
       };
-    } else if (specialistId === "mail" && message.toLowerCase().includes("find")) {
+    } else if (specialistId === "calendar" && (lowerMessage.includes("schedule") || lowerMessage.includes("event") || lowerMessage.includes("calendar") || lowerMessage.includes("meet"))) {
       proposedStep = {
-        title: "Draft Reply",
-        description: "Draft a follow-up response addressing regional entry strategy.",
-        primaryAction: "Draft Response",
-        secondaryAction: "Ignore"
+        title: "Optimize Focus Block",
+        description: "Review agenda conflicts and apply AI scheduling optimizations for optimal deep focus blocks.",
+        primaryAction: "Apply Optimization",
+        secondaryAction: "Dismiss"
       };
     } else {
       proposedStep = {
         title: "Strategy Review",
-        description: "Add Singapore logistics summary to strategic goals folder.",
+        description: "Verify APAC regional rollout details and check upcoming logistics summary briefings.",
         primaryAction: "Execute Strategy Plan",
         secondaryAction: "Dismiss"
       };
     }
 
-    return NextResponse.json({
-      text: response.text,
-      specialistName,
-      proposedStep
+    // 6. Stream text responses utilizing NDJSON streaming
+    const result = streamText({
+      model: openrouter.chat("google/gemini-2.5-pro"),
+      maxOutputTokens: 1000,
+      system: systemPrompt,
+      messages: [
+        ...(history || []),
+        { role: "user", content: message }
+      ],
+      stopWhen: [stepCountIs(3)],
+      tools,
+    });
+
+    const textStream = result.textStream;
+    const encoder = new TextEncoder();
+
+    const responseStream = new ReadableStream({
+      async start(controller) {
+        try {
+          for await (const chunk of textStream) {
+            controller.enqueue(encoder.encode(JSON.stringify({ type: "text", content: chunk }) + "\n"));
+          }
+          // Enqueue proposed step at the very end of the text stream
+          if (proposedStep) {
+            controller.enqueue(encoder.encode(JSON.stringify({ type: "proposedStep", content: proposedStep }) + "\n"));
+          }
+        } catch (err) {
+          controller.error(err);
+        } finally {
+          controller.close();
+        }
+      }
+    });
+
+    return new Response(responseStream, {
+      headers: {
+        "Content-Type": "application/x-ndjson",
+        "Cache-Control": "no-cache",
+        "Connection": "keep-alive"
+      }
     });
 
   } catch (error: any) {

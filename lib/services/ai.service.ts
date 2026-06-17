@@ -12,7 +12,8 @@ const openrouter = createOpenAI({
   apiKey: ENV.AI_API_KEY,
 });
 
-const systemPrompt = `You are Aether AI, the intelligent coordinator of Aether OS.
+function getSystemPrompt() {
+  return `You are Aether AI, the intelligent coordinator of Aether OS.
 You have access to tools for Gmail and Google Calendar. You must coordinate user requests regarding messages and schedules.
 
 CRITICAL RULES & OPERATING PROCEDURES:
@@ -39,7 +40,18 @@ CRITICAL RULES & OPERATING PROCEDURES:
 
 5. TONE & RESPONSE FORMAT:
    - Keep your responses concise, polite, professional, and aligned with the high-end Aether OS aesthetic.
-   - Do not expose the names of the tools or technical details of your execution to the user. Speak as an executive coordinator.`;
+   - Do not expose the names of the tools or technical details of your execution to the user. Speak as an executive coordinator.
+
+6. AUTONOMOUS THINKING & DRAFTING (MANDATORY):
+   - You MUST work autonomously using your own reasoning and thinking power.
+   - When asked to perform actions (such as sending an email or setting up/creating calendar events), if the user has not specified a title, summary, email subject, or email body, do NOT ask the user for these details.
+   - Instead, autonomously draft/generate appropriate, professional, and formal values for them:
+     - For email subjects and bodies: Write a complete, polite, and professionally formatted email maintaining all standard business/formal correspondence rules (greetings, sign-off, clear paragraphs, polite tone).
+     - For calendar events: Create an appropriate summary/title (e.g. "Meeting with [Name]" or "Discussion on [Topic]" or "Strategic Session") and set a logical duration (e.g. 1 hour starting at the requested time).
+   - If the user provides a request containing multiple actions (e.g., "set an event at 6 pm today and send an email..."), you must call ALL relevant tools in succession during the same turn to fulfill the complete request. Do not ask for confirmation or extra information before executing.
+
+Current Date and Time: ${new Date().toString()} (ISO: ${new Date().toISOString()})`;
+}
 
 export async function checkAiLimit(
   userId: string,
@@ -125,9 +137,9 @@ export const executeAiCommand = async ({
   let pendingDeleteInfo: any = null;
 
   const response = await generateText({
-    model: openrouter("google/gemini-2.5-flash"),
+    model: openrouter.chat("google/gemini-2.5-flash"),
     maxOutputTokens: 1000,
-    system: systemPrompt,
+    system: getSystemPrompt(),
     prompt: command,
     stopWhen: [stepCountIs(3)], // Support multi-turn tool calling
     tools: {
@@ -177,6 +189,7 @@ export const executeAiCommand = async ({
           body: z.string().describe("Email body content (HTML or plain text)"),
         }),
         execute: async ({ to, subject, body }: { to: string; subject: string; body: string }) => {
+          console.log("[AGENT TOOL] sendEmail invoked:", { to, subject, body });
           try {
             const mimeMessage = [
               `To: ${to}`,
@@ -244,18 +257,53 @@ export const executeAiCommand = async ({
       createCalendarEvent: tool({
         description: "Create a new event in the calendar.",
         parameters: z.object({
-          summary: z.string().describe("Title of the event"),
+          summary: z.string().optional().describe("Title of the event. Defaults to 'Meeting' if not specified."),
           description: z.string().optional().describe("Optional description"),
-          startDateTime: z.string().describe("ISO start date time"),
-          endDateTime: z.string().describe("ISO end date time"),
+          startDateTime: z.string().optional().describe(
+            "The start date-time for the event in ISO 8601 format (e.g., '2026-06-17T18:00:00+05:30'). " +
+            "You MUST compute the exact date and time based on the current local time context provided in the system prompt. " +
+            "For example, if the current time is Wed Jun 17 2026 18:20:14 GMT+0530, and the user asks for '6 pm today', " +
+            "calculate the date '2026-06-17' and time '18:00:00', and format it with the offset: '2026-06-17T18:00:00+05:30'."
+          ),
+          endDateTime: z.string().optional().describe(
+            "The end date-time for the event in ISO 8601 format (e.g., '2026-06-17T19:00:00+05:30'). " +
+            "Must be after startDateTime. If no duration is specified, assume a 1-hour duration."
+          ),
         }),
-        execute: async ({ summary, description, startDateTime, endDateTime }: { summary: string; description?: string; startDateTime: string; endDateTime: string }) => {
+        execute: async ({ summary, description, startDateTime, endDateTime }: { summary?: string; description?: string; startDateTime?: string; endDateTime?: string }) => {
+          console.log("[AGENT TOOL] createCalendarEvent invoked:", { summary, description, startDateTime, endDateTime });
           try {
+            const formatISO = (dt?: string) => {
+              if (!dt) return new Date().toISOString();
+              try {
+                const parsed = new Date(dt);
+                return isNaN(parsed.getTime()) ? dt : parsed.toISOString();
+              } catch {
+                return dt;
+              }
+            };
+            const formatISOEnd = (dt?: string, startDt?: string) => {
+              if (!dt) {
+                const baseDate = startDt ? new Date(startDt) : new Date();
+                const end = new Date(baseDate.getTime() + 60 * 60 * 1000);
+                return end.toISOString();
+              }
+              try {
+                const parsed = new Date(dt);
+                return isNaN(parsed.getTime()) ? dt : parsed.toISOString();
+              } catch {
+                return dt;
+              }
+            };
+
+            const computedStart = formatISO(startDateTime);
+            const computedEnd = formatISOEnd(endDateTime, computedStart);
+
             const created = await createEvent(tenantId, {
-              summary,
-              description,
-              start: { dateTime: startDateTime },
-              end: { dateTime: endDateTime },
+              summary: summary || "Meeting",
+              ...(description ? { description } : {}),
+              start: { dateTime: computedStart },
+              end: { dateTime: computedEnd },
             });
             return { success: true, event: created };
           } catch (e: any) {
@@ -319,7 +367,7 @@ export const executeAiCommand = async ({
 // Deprecated in favor of executeAiCommand, kept for backwards compatibility
 export const aiService = async ({ prompt }: { prompt: string }) => {
   const response = await generateText({
-    model: openrouter("google/gemini-2.5-flash"),
+    model: openrouter.chat("google/gemini-2.5-flash"),
     maxOutputTokens: 1000,
     prompt,
   });
