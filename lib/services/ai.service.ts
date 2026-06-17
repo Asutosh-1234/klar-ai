@@ -13,29 +13,33 @@ const openrouter = createOpenAI({
 });
 
 const systemPrompt = `You are Aether AI, the intelligent coordinator of Aether OS.
-You have access to tools for Gmail and Google Calendar. You can search/view emails, send emails, search/view calendar events, create calendar events, delete calendar events, and request email deletion.
+You have access to tools for Gmail and Google Calendar. You must coordinate user requests regarding messages and schedules.
 
-CRITICAL RULES:
-1. DO NOT delete emails directly. If a user asks to delete an email, you MUST use the \`requestEmailDeletion\` tool to select the mail and ask the user for confirmation.
-2. Always verify details (like date/time for calendar events, or email addresses) before calling tools.
-3. Be concise, polite, and professional.
+CRITICAL RULES & OPERATING PROCEDURES:
+1. EMAIL DELETION RESTRICTION (MANDATORY):
+   - You are strictly FORBIDDEN from deleting emails directly.
+   - If a user asks to delete, trash, remove, or clean up an email, you must:
+     a. First search for the email using the 'listEmails' tool to obtain its details (id, subject, sender).
+     b. Call the 'requestEmailDeletion' tool with the correct 'emailId', 'subject', and 'sender'.
+     c. Present the confirmation details to the user and ask them to confirm the deletion.
+   - Never call any other tool or attempt to bypass this confirmation step for email deletion.
 
-Few-Shot Examples:
+2. GMAIL COMMUNICATIONS:
+   - To find emails, use 'listEmails' with appropriate search queries (e.g. 'from:Netflix').
+   - To send an email, use 'sendEmail' with the recipient's email ('to'), a clear 'subject', and HTML or plain text 'body'.
 
-User: "Send an email to boss@company.com saying I will be late."
-AI: Calls tool sendEmail({ to: "boss@company.com", subject: "Running Late", body: "Hi, just letting you know I will be late today." })
-Response: I have sent the email to boss@company.com.
+3. GOOGLE CALENDAR MANAGEMENT:
+   - To list events, call 'listCalendarEvents' using start ('timeMin') and end ('timeMax') date-time values in ISO format (e.g. 'YYYY-MM-DDT00:00:00Z').
+   - To create events, call 'createCalendarEvent' with the event's summary, description, startDateTime, and endDateTime in ISO format.
+   - To delete events, call 'deleteCalendarEvent' with the specific 'eventId'.
 
-User: "What meetings do I have tomorrow?"
-AI: Calls tool listCalendarEvents({ timeMin: "2026-06-18T00:00:00Z", timeMax: "2026-06-18T23:59:59Z" })
-Response: You have 2 meetings tomorrow: 1. Board Alignment at 10 AM, 2. Design Review at 3 PM.
+4. IDENTITY & SECURITY:
+   - You do NOT have direct access to the application database. Never refer to or attempt to query databases directly.
+   - Do not make up IDs (like emailId or eventId). You must retrieve them first using the search/list tools.
 
-User: "Delete the email from Netflix about subscription."
-AI: Calls tool listEmails({ q: "from:Netflix subscription" })
-(After receiving email list containing msg_123, subject "Your subscription update")
-AI: Calls tool requestEmailDeletion({ emailId: "msg_123", subject: "Your subscription update", sender: "Netflix" })
-Response: I found the email "Your subscription update" from Netflix. Please confirm if you want to delete it.
-`;
+5. TONE & RESPONSE FORMAT:
+   - Keep your responses concise, polite, professional, and aligned with the high-end Aether OS aesthetic.
+   - Do not expose the names of the tools or technical details of your execution to the user. Speak as an executive coordinator.`;
 
 export async function checkAiLimit(
   userId: string,
@@ -174,12 +178,20 @@ export const executeAiCommand = async ({
         }),
         execute: async ({ to, subject, body }: { to: string; subject: string; body: string }) => {
           try {
-            const rawMime = Buffer.from(
-              `To: ${to}\r\n` +
-              `Subject: ${subject}\r\n` +
-              `Content-Type: text/html; charset=utf-8\r\n\r\n` +
-              `${body}`
-            ).toString("base64url");
+            const mimeMessage = [
+              `To: ${to}`,
+              `Subject: =?utf-8?B?${Buffer.from(subject).toString("base64")}?=`,
+              'Content-Type: text/html; charset="UTF-8"',
+              'MIME-Version: 1.0',
+              '',
+              body
+            ].join('\r\n');
+            const rawMime = Buffer.from(mimeMessage)
+              .toString("base64")
+              .replace(/\+/g, "-")
+              .replace(/\//g, "_")
+              .replace(/=+$/, "");
+
             const draft = await createDraft(tenantId, rawMime);
             if (!draft.id) {
               throw new Error("Failed to create draft");
@@ -268,30 +280,30 @@ export const executeAiCommand = async ({
     },
   });
 
-  // 3. Trigger Inngest event in the background to durably audit and increment limits
+  // 3. Increment usage limit directly in the database
   try {
-    await inngest.send({
-      name: "ai/command-executed",
+    await prisma.user.update({
+      where: { id: userId },
       data: {
-        userId,
-        command,
+        aiUsageCount: {
+          increment: 1,
+        },
       },
     });
-  } catch (error) {
-    console.warn("[Inngest] Failed to send event to Inngest client, falling back to direct db update:", error);
-    try {
-      await prisma.user.update({
-        where: { id: userId },
-        data: {
-          aiUsageCount: {
-            increment: 1,
-          },
-        },
-      });
-    } catch (dbError) {
-      console.error("[Inngest Fallback] Failed to update user AI usage in database:", dbError);
-    }
+  } catch (dbError) {
+    console.error("[Limit Update] Failed to update user AI usage in database:", dbError);
   }
+
+  // 4. Trigger Inngest event in the background (fire-and-forget, non-awaited)
+  inngest.send({
+    name: "ai/command-executed",
+    data: {
+      userId,
+      command,
+    },
+  }).catch((error) => {
+    console.warn("[Inngest] Failed to send background event:", error.message || error);
+  });
 
   return {
     text: response.text,

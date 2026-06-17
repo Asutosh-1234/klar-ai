@@ -106,3 +106,15 @@ export const removeFromArchive = async (tenantId: string, messageIds: string[]) 
     );
   }
 }
+
+export const getAllSentMails = async (params: GmailServiceTypes) => {
+  const query = params.q ? `in:sent ${params.q}` : "in:sent";
+  const mails = await corsair.withTenant(params.tenentId).gmail.api.messages.list({
+    userId: params.userId,
+    q: query,
+    maxResults: params.maxResults,
+    pageToken: params.pageToken,
+    includeSpamTrash: params.includeSpamTrash
+  });
+  return mails.messages || [];
+}

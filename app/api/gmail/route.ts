@@ -13,13 +13,18 @@ export async function GET(request: NextRequest) {
     const q = searchParams.get("q") || undefined;
     const maxResults = searchParams.get("maxResults") ? parseInt(searchParams.get("maxResults")!) : 20;
 
+    let labelIds: string[] | undefined = ["INBOX"];
+    if (q && (q.includes("label:SENT") || q.includes("in:sent") || q.includes("is:starred") || q.includes("label:TRASH") || q.includes("label:SPAM"))) {
+      labelIds = undefined;
+    }
+
     const messages = await getAllMails({ 
       userId: "me",
       tenentId: tenantId, 
       q, 
       maxResults,
       includeSpamTrash: true,
-      labelIds: ["INBOX"]
+      labelIds
     });
 
     if (!messages || messages.length === 0) {
