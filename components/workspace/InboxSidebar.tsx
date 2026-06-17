@@ -24,7 +24,6 @@ export function InboxSidebar({
     { id: "SENT", label: "Sent", icon: "send" },
     { id: "DRAFT", label: "Drafts", icon: "drafts" },
     { id: "ARCHIVE", label: "Archive", icon: "archive" },
-    { id: "PURCHASES", label: "Purchases", icon: "shopping_bag" },
     { id: "CALENDAR", label: "Calendar", icon: "calendar_today" },
     { id: "AGENTS", label: "Agents", icon: "smart_toy" },
     { id: "SETTINGS", label: "Settings", icon: "settings" },

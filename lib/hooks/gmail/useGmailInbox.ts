@@ -11,7 +11,7 @@ export function useGmailInbox() {
   const [error, setError] = useState<string | null>(null);
 
   const fetchEmails = useCallback(async (query = "", label = selectedFolder, category = selectedCategory) => {
-    if (["PURCHASES", "CALENDAR", "AGENTS", "SETTINGS"].includes(label)) {
+    if (["CALENDAR", "AGENTS", "SETTINGS"].includes(label)) {
       setLoading(false);
       setMessages([]);
       setSelectedMessage(null);

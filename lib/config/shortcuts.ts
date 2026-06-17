@@ -49,14 +49,6 @@ export const SHORTCUTS: Shortcut[] = [
     displayKeys: [["g", "r"]]
   },
   {
-    id: "PURCHASES",
-    label: "Go to Purchases",
-    category: "navigation",
-    ctrlKey: "p",
-    seqKey: "p",
-    displayKeys: [["Ctrl", "P"], ["g", "p"]]
-  },
-  {
     id: "CALENDAR",
     label: "Go to Calendar",
     category: "navigation",

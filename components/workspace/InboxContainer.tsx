@@ -9,7 +9,6 @@ import { MailList } from "../gmail/MailList";
 import { MailDetails } from "../gmail/MailDetails";
 import { AICommandCenter } from "./AICommandCenter";
 import { AetherCalendarView } from "../calendar/AetherCalendarView";
-import { AetherPurchasesView } from "../purchases/AetherPurchasesView";
 import { AetherAgentsView } from "../agents/AetherAgentsView";
 import { AetherSettingsView } from "./AetherSettingsView";
 import { ShortcutsHelpModal } from "./ShortcutsHelpModal";
@@ -166,7 +165,7 @@ export function InboxContainer({ user }: InboxContainerProps) {
 
   const onSearchSubmit = (e: React.SubmitEvent) => {
     e.preventDefault();
-    if (!["CALENDAR", "PURCHASES", "AGENTS", "SETTINGS"].includes(selectedFolder)) {
+    if (!["CALENDAR", "AGENTS", "SETTINGS"].includes(selectedFolder)) {
       fetchEmails(searchQuery);
     }
   };
@@ -175,8 +174,6 @@ export function InboxContainer({ user }: InboxContainerProps) {
     switch (selectedFolder) {
       case "CALENDAR":
         return "Search events or agents...";
-      case "PURCHASES":
-        return "Search transactions, invoices, or vendors...";
       case "AGENTS":
         return "Search active agents...";
       case "SETTINGS":
@@ -218,7 +215,7 @@ export function InboxContainer({ user }: InboxContainerProps) {
           </form>
 
           <div className="flex items-center gap-4 text-on-surface-variant ml-4 shrink-0">
-            {!["CALENDAR", "PURCHASES", "AGENTS", "SETTINGS"].includes(selectedFolder) && (
+            {!["CALENDAR", "AGENTS", "SETTINGS"].includes(selectedFolder) && (
               <div className="flex gap-6 mr-6">
                 <button
                   type="button"
@@ -293,8 +290,6 @@ export function InboxContainer({ user }: InboxContainerProps) {
         <div className="flex flex-1 overflow-hidden min-w-0">
           {selectedFolder === "CALENDAR" ? (
             <AetherCalendarView />
-          ) : selectedFolder === "PURCHASES" ? (
-            <AetherPurchasesView />
           ) : selectedFolder === "AGENTS" ? (
             <AetherAgentsView user={user} />
           ) : selectedFolder === "SETTINGS" ? (
