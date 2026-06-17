@@ -24,6 +24,7 @@ model User {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
   emails    Email[]
+  calendarEvents CalendarEvent[]
   plans     UserPlan[]
 
   @@map("user")
@@ -96,6 +97,22 @@ model Email {
   isStarred  Boolean                     @default(false)
   receivedAt DateTime?
   embedding  Unsupported("vector(768)")?
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+}
+
+model CalendarEvent {
+  id          String                      @id @default(cuid())
+  userId      String
+  eventId     String                      @unique
+  summary     String?
+  description String?
+  location    String?
+  start       DateTime?
+  end         DateTime?
+  embedding   Unsupported("vector(768)")?
 
   user User @relation(fields: [userId], references: [id])
 
