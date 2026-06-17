@@ -72,6 +72,7 @@ export function InboxContainer({ user }: InboxContainerProps) {
   const [isHelpOpen, setIsHelpOpen] = useState(false);
   const lastKeyPressedRef = useRef<string | null>(null);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -146,6 +147,59 @@ export function InboxContainer({ user }: InboxContainerProps) {
         }
       }
 
+      const prevMailShortcut = SHORTCUTS.find(s => s.id === "PREV_MAIL");
+      if (prevMailShortcut?.singleKeys?.includes(key)) {
+        if (messages.length > 0) {
+          e.preventDefault();
+          const currentIndex = selectedMessage ? messages.findIndex(m => m.id === selectedMessage.id) : -1;
+          const prevIndex = currentIndex - 1 >= 0 ? currentIndex - 1 : 0;
+          if (prevIndex >= 0 && prevIndex < messages.length) {
+            setSelectedMessage(messages[prevIndex]);
+          }
+        }
+        return;
+      }
+
+      const nextMailShortcut = SHORTCUTS.find(s => s.id === "NEXT_MAIL");
+      if (nextMailShortcut?.singleKeys?.includes(key)) {
+        if (messages.length > 0) {
+          e.preventDefault();
+          const currentIndex = selectedMessage ? messages.findIndex(m => m.id === selectedMessage.id) : -1;
+          const nextIndex = currentIndex + 1 < messages.length ? currentIndex + 1 : currentIndex;
+          if (nextIndex >= 0 && nextIndex < messages.length) {
+            setSelectedMessage(messages[nextIndex]);
+          }
+        }
+        return;
+      }
+
+      const archiveMailShortcut = SHORTCUTS.find(s => s.id === "ARCHIVE_MAIL");
+      if (archiveMailShortcut?.singleKeys?.includes(key)) {
+        if (selectedMessage && selectedMessage.id) {
+          e.preventDefault();
+          archiveMessage(selectedMessage.id);
+          setSelectedMessage(null);
+        }
+        return;
+      }
+
+      const deleteMailShortcut = SHORTCUTS.find(s => s.id === "DELETE_MAIL");
+      if (deleteMailShortcut?.singleKeys?.includes(key)) {
+        if (selectedMessage && selectedMessage.id) {
+          e.preventDefault();
+          deleteMessage(selectedMessage.id);
+          setSelectedMessage(null);
+        }
+        return;
+      }
+
+      const focusSearchShortcut = SHORTCUTS.find(s => s.id === "FOCUS_SEARCH");
+      if (focusSearchShortcut?.singleKeys?.includes(key)) {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+        return;
+      }
+
       // Track sequence initiator keys
       if (key === "g" || key === "control") {
         lastKeyPressedRef.current = key;
@@ -161,7 +215,7 @@ export function InboxContainer({ user }: InboxContainerProps) {
       window.removeEventListener("keydown", handleKeyDown);
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
     };
-  }, [openCompose, isHelpOpen, isComposeOpen, selectedMessage, setSelectedFolder, setSelectedMessage]);
+  }, [openCompose, isHelpOpen, isComposeOpen, selectedMessage, setSelectedFolder, setSelectedMessage, messages, archiveMessage, deleteMessage]);
 
   const onSearchSubmit = (e: React.SubmitEvent) => {
     e.preventDefault();
@@ -205,6 +259,7 @@ export function InboxContainer({ user }: InboxContainerProps) {
                 search
               </span>
               <input
+                ref={searchInputRef}
                 type="text"
                 placeholder={getSearchPlaceholder()}
                 value={searchQuery}

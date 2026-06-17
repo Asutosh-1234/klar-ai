@@ -92,5 +92,40 @@ export const SHORTCUTS: Shortcut[] = [
     category: "action",
     singleKeys: ["escape"],
     displayKeys: [["Esc"]]
+  },
+  {
+    id: "PREV_MAIL",
+    label: "Move Selection Up (Previous Email)",
+    category: "action",
+    singleKeys: ["k"],
+    displayKeys: [["k"]]
+  },
+  {
+    id: "NEXT_MAIL",
+    label: "Move Selection Down (Next Email)",
+    category: "action",
+    singleKeys: ["j"],
+    displayKeys: [["j"]]
+  },
+  {
+    id: "ARCHIVE_MAIL",
+    label: "Archive Selected Email",
+    category: "action",
+    singleKeys: ["e", "y"],
+    displayKeys: [["e"], ["y"]]
+  },
+  {
+    id: "DELETE_MAIL",
+    label: "Delete Selected Email",
+    category: "action",
+    singleKeys: ["#", "d"],
+    displayKeys: [["#"], ["d"]]
+  },
+  {
+    id: "FOCUS_SEARCH",
+    label: "Focus Search Box",
+    category: "action",
+    singleKeys: ["/"],
+    displayKeys: [["/"]]
   }
 ];
