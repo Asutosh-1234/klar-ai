@@ -72,6 +72,11 @@ export type CorsairEvent = Prisma.CorsairEventModel
  */
 export type Email = Prisma.EmailModel
 /**
+ * Model CalendarEvent
+ * 
+ */
+export type CalendarEvent = Prisma.CalendarEventModel
+/**
  * Model Plan
  * 
  */

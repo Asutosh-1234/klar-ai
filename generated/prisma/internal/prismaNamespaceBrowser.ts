@@ -57,6 +57,7 @@ export const ModelName = {
   CorsairEntity: 'CorsairEntity',
   CorsairEvent: 'CorsairEvent',
   Email: 'Email',
+  CalendarEvent: 'CalendarEvent',
   Plan: 'Plan',
   UserPlan: 'UserPlan',
   Payment: 'Payment',
@@ -159,6 +160,20 @@ export const EmailScalarFieldEnum = {
 } as const
 
 export type EmailScalarFieldEnum = (typeof EmailScalarFieldEnum)[keyof typeof EmailScalarFieldEnum]
+
+
+export const CalendarEventScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  eventId: 'eventId',
+  summary: 'summary',
+  description: 'description',
+  location: 'location',
+  start: 'start',
+  end: 'end'
+} as const
+
+export type CalendarEventScalarFieldEnum = (typeof CalendarEventScalarFieldEnum)[keyof typeof CalendarEventScalarFieldEnum]
 
 
 export const PlanScalarFieldEnum = {
