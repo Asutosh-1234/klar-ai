@@ -3,20 +3,12 @@
 import Link from 'next/link';
 import { signOut } from 'next-auth/react';
 import { InboxSidebarProps } from '@/lib/types';
+import { SHORTCUTS } from "@/lib/config/shortcuts";
 
 function getShortcutString(folderId: string): string {
-  switch (folderId) {
-    case "INBOX": return "Ctrl+I / g+i";
-    case "STARRED": return "Ctrl+S / g+s";
-    case "SENT": return "Ctrl+E / g+e";
-    case "DRAFT": return "Ctrl+D / g+d";
-    case "ARCHIVE": return "g+r";
-    case "PURCHASES": return "Ctrl+P / g+p";
-    case "CALENDAR": return "Ctrl+C / g+c";
-    case "AGENTS": return "Ctrl+A / g+a";
-    case "SETTINGS": return "Ctrl+O / g+o";
-    default: return "";
-  }
+  const shortcut = SHORTCUTS.find(s => s.id === folderId);
+  if (!shortcut) return "";
+  return shortcut.displayKeys.map(kGroup => kGroup.join("+")).join(" / ");
 }
 
 export function InboxSidebar({
@@ -38,6 +30,9 @@ export function InboxSidebar({
     { id: "SETTINGS", label: "Settings", icon: "settings" },
   ];
 
+  const composeShortcut = SHORTCUTS.find(s => s.id === "COMPOSE");
+  const composeKeyLabel = composeShortcut?.displayKeys?.[0]?.[0] || "N";
+
   return (
     <aside className="w-64 shrink-0 flex flex-col h-full py-8 bg-surface-container border-r border-white/5 z-50">
       
@@ -55,8 +50,8 @@ export function InboxSidebar({
         >
           <span className="material-symbols-outlined text-[20px] font-semibold">add</span>
           <span className="font-label-md text-xs">Compose</span>
-          <div className="absolute right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center bg-black/40 text-primary px-1.5 py-0.5 rounded text-[8px] font-mono border border-white/10 select-none">
-            N
+          <div className="absolute right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center bg-black/40 text-primary px-1.5 py-0.5 rounded text-[8px] font-mono border border-white/10 select-none uppercase">
+            {composeKeyLabel}
           </div>
         </button>
       </div>

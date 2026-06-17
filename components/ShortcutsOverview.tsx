@@ -1,6 +1,7 @@
 'use client'
 
 import React from "react";
+import { SHORTCUTS } from "@/lib/config/shortcuts";
 
 interface KeyCapProps {
   children: React.ReactNode;
@@ -15,23 +16,8 @@ function KeyCap({ children }: KeyCapProps) {
 }
 
 export function ShortcutsOverview() {
-  const navigationShortcuts = [
-    { label: "Go to Inbox", keys: [["Ctrl", "I"], ["g", "i"]] },
-    { label: "Go to Starred", keys: [["Ctrl", "S"], ["g", "s"]] },
-    { label: "Go to Sent", keys: [["Ctrl", "E"], ["g", "e"]] },
-    { label: "Go to Drafts", keys: [["Ctrl", "D"], ["g", "d"]] },
-    { label: "Go to Archive", keys: [["g", "r"]] },
-    { label: "Go to Purchases", keys: [["Ctrl", "P"], ["g", "p"]] },
-    { label: "Go to Calendar", keys: [["Ctrl","Z"], ["g","z"]] },
-    { label: "Go to Agents", keys: [["Ctrl", "A"], ["g", "a"]] },
-    { label: "Go to Settings", keys: [["Ctrl", "O"], ["g", "o"]] },
-  ];
-
-  const actionShortcuts = [
-    { label: "Compose New Email", keys: [["n"]] },
-    { label: "Toggle Help Dialog", keys: [["?"], ["h"]] },
-    { label: "Close Panel / Modal", keys: [["Esc"]] },
-  ];
+  const navigationShortcuts = SHORTCUTS.filter(s => s.category === "navigation");
+  const actionShortcuts = SHORTCUTS.filter(s => s.category === "action");
 
   return (
     <section id="shortcuts" className="py-section-gap bg-linear-to-b from-transparent via-surface-sidebar/30 to-transparent relative overflow-hidden">
@@ -61,11 +47,11 @@ export function ShortcutsOverview() {
             </p>
 
             <div className="space-y-4">
-              {navigationShortcuts.map((shortcut, idx) => (
-                <div key={idx} className="flex justify-between items-center py-2.5 border-b border-white/5 last:border-0 hover:bg-white/1 px-2 rounded-lg transition-colors">
+              {navigationShortcuts.map((shortcut) => (
+                <div key={shortcut.id} className="flex justify-between items-center py-2.5 border-b border-white/5 last:border-0 hover:bg-white/1 px-2 rounded-lg transition-colors">
                   <span className="text-sm text-on-surface-variant">{shortcut.label}</span>
                   <div className="flex items-center gap-3">
-                    {shortcut.keys.map((keyGroup, groupIdx) => (
+                    {shortcut.displayKeys.map((keyGroup, groupIdx) => (
                       <React.Fragment key={groupIdx}>
                         {groupIdx > 0 && <span className="text-[10px] text-on-surface-variant opacity-40">or</span>}
                         <div className="flex items-center gap-1">
@@ -96,11 +82,11 @@ export function ShortcutsOverview() {
               </p>
 
               <div className="space-y-4">
-                {actionShortcuts.map((shortcut, idx) => (
-                  <div key={idx} className="flex justify-between items-center py-2.5 border-b border-white/5 last:border-0 hover:bg-white/1 px-2 rounded-lg transition-colors">
+                {actionShortcuts.map((shortcut) => (
+                  <div key={shortcut.id} className="flex justify-between items-center py-2.5 border-b border-white/5 last:border-0 hover:bg-white/1 px-2 rounded-lg transition-colors">
                     <span className="text-sm text-on-surface-variant">{shortcut.label}</span>
                     <div className="flex items-center gap-3">
-                      {shortcut.keys.map((keyGroup, groupIdx) => (
+                      {shortcut.displayKeys.map((keyGroup, groupIdx) => (
                         <React.Fragment key={groupIdx}>
                           {groupIdx > 0 && <span className="text-[10px] text-on-surface-variant opacity-40">or</span>}
                           <div className="flex items-center gap-1">

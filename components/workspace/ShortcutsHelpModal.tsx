@@ -3,9 +3,13 @@
 import React from "react";
 import { ShortcutsHelpModalProps } from "@/lib/types";
 import { ShortcutRow, KeyBadge } from "./ShortcutRow";
+import { SHORTCUTS } from "@/lib/config/shortcuts";
 
 export function ShortcutsHelpModal({ isOpen, onClose }: ShortcutsHelpModalProps) {
   if (!isOpen) return null;
+
+  const navigationShortcuts = SHORTCUTS.filter(s => s.category === "navigation");
+  const actionShortcuts = SHORTCUTS.filter(s => s.category === "action");
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-999 flex items-center justify-center p-4">
@@ -30,75 +34,21 @@ export function ShortcutsHelpModal({ isOpen, onClose }: ShortcutsHelpModalProps)
               Navigation Shortcuts (Simultaneous or Sequential)
             </h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3">
-              <ShortcutRow label="Go to Inbox">
-                <KeyBadge>Ctrl+I</KeyBadge>
-                <span className="text-[9px] opacity-40">or</span>
-                <KeyBadge>g</KeyBadge>
-                <span className="text-[9px] opacity-45">➔</span>
-                <KeyBadge>i</KeyBadge>
-              </ShortcutRow>
-
-              <ShortcutRow label="Go to Starred">
-                <KeyBadge>Ctrl+S</KeyBadge>
-                <span className="text-[9px] opacity-40">or</span>
-                <KeyBadge>g</KeyBadge>
-                <span className="text-[9px] opacity-45">➔</span>
-                <KeyBadge>s</KeyBadge>
-              </ShortcutRow>
-
-              <ShortcutRow label="Go to Sent">
-                <KeyBadge>Ctrl+E</KeyBadge>
-                <span className="text-[9px] opacity-40">or</span>
-                <KeyBadge>g</KeyBadge>
-                <span className="text-[9px] opacity-45">➔</span>
-                <KeyBadge>e</KeyBadge>
-              </ShortcutRow>
-
-              <ShortcutRow label="Go to Drafts">
-                <KeyBadge>Ctrl+D</KeyBadge>
-                <span className="text-[9px] opacity-40">or</span>
-                <KeyBadge>g</KeyBadge>
-                <span className="text-[9px] opacity-45">➔</span>
-                <KeyBadge>d</KeyBadge>
-              </ShortcutRow>
-
-              <ShortcutRow label="Go to Archive">
-                <KeyBadge>g</KeyBadge>
-                <span className="text-[9px] opacity-45">➔</span>
-                <KeyBadge>r</KeyBadge>
-              </ShortcutRow>
-
-              <ShortcutRow label="Go to Purchases">
-                <KeyBadge>Ctrl+P</KeyBadge>
-                <span className="text-[9px] opacity-40">or</span>
-                <KeyBadge>g</KeyBadge>
-                <span className="text-[9px] opacity-45">➔</span>
-                <KeyBadge>p</KeyBadge>
-              </ShortcutRow>
-
-              <ShortcutRow label="Go to Calendar">
-                <KeyBadge>Ctrl+C</KeyBadge>
-                <span className="text-[9px] opacity-40">or</span>
-                <KeyBadge>g</KeyBadge>
-                <span className="text-[9px] opacity-45">➔</span>
-                <KeyBadge>c</KeyBadge>
-              </ShortcutRow>
-
-              <ShortcutRow label="Go to Agents">
-                <KeyBadge>Ctrl+A</KeyBadge>
-                <span className="text-[9px] opacity-40">or</span>
-                <KeyBadge>g</KeyBadge>
-                <span className="text-[9px] opacity-45">➔</span>
-                <KeyBadge>a</KeyBadge>
-              </ShortcutRow>
-
-              <ShortcutRow label="Go to Settings">
-                <KeyBadge>Ctrl+O</KeyBadge>
-                <span className="text-[9px] opacity-40">or</span>
-                <KeyBadge>g</KeyBadge>
-                <span className="text-[9px] opacity-45">➔</span>
-                <KeyBadge>o</KeyBadge>
-              </ShortcutRow>
+              {navigationShortcuts.map((shortcut) => (
+                <ShortcutRow key={shortcut.id} label={shortcut.label}>
+                  {shortcut.displayKeys.map((keyGroup, groupIdx) => (
+                    <React.Fragment key={groupIdx}>
+                      {groupIdx > 0 && <span className="text-[9px] opacity-40">or</span>}
+                      {keyGroup.map((k, kIdx) => (
+                        <React.Fragment key={kIdx}>
+                          {kIdx > 0 && <span className="text-[9px] opacity-45">➔</span>}
+                          <KeyBadge size="sm">{k}</KeyBadge>
+                        </React.Fragment>
+                      ))}
+                    </React.Fragment>
+                  ))}
+                </ShortcutRow>
+              ))}
             </div>
           </div>
 
@@ -106,19 +56,21 @@ export function ShortcutsHelpModal({ isOpen, onClose }: ShortcutsHelpModalProps)
           <div>
             <h4 className="text-[10px] font-bold text-primary uppercase tracking-widest mb-3 opacity-80">Global Actions</h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3">
-              <ShortcutRow label="Compose New Email">
-                <KeyBadge size="md">n</KeyBadge>
-              </ShortcutRow>
-
-              <ShortcutRow label="Toggle Help Dialog">
-                <KeyBadge size="md">?</KeyBadge>
-                <span className="text-[10px] opacity-40">/</span>
-                <KeyBadge size="md">h</KeyBadge>
-              </ShortcutRow>
-
-              <ShortcutRow label="Close Panel / Modal">
-                <KeyBadge size="md">Esc</KeyBadge>
-              </ShortcutRow>
+              {actionShortcuts.map((shortcut) => (
+                <ShortcutRow key={shortcut.id} label={shortcut.label}>
+                  {shortcut.displayKeys.map((keyGroup, groupIdx) => (
+                    <React.Fragment key={groupIdx}>
+                      {groupIdx > 0 && <span className="text-[9px] opacity-40">or</span>}
+                      {keyGroup.map((k, kIdx) => (
+                        <React.Fragment key={kIdx}>
+                          {kIdx > 0 && <span className="text-[9px] opacity-45">/</span>}
+                          <KeyBadge size="md">{k}</KeyBadge>
+                        </React.Fragment>
+                      ))}
+                    </React.Fragment>
+                  ))}
+                </ShortcutRow>
+              ))}
             </div>
           </div>
         </div>

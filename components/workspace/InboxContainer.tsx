@@ -13,6 +13,7 @@ import { AetherPurchasesView } from "../purchases/AetherPurchasesView";
 import { AetherAgentsView } from "../agents/AetherAgentsView";
 import { AetherSettingsView } from "./AetherSettingsView";
 import { ShortcutsHelpModal } from "./ShortcutsHelpModal";
+import { SHORTCUTS } from "@/lib/config/shortcuts";
 
 import { UserProfile, InboxContainerProps } from "@/lib/types";
 
@@ -88,45 +89,10 @@ export function InboxContainer({ user }: InboxContainerProps) {
 
       // 1. Direct Ctrl + key combination (simultaneous)
       if (e.ctrlKey && !e.altKey && !e.metaKey) {
-        let matched = true;
-        switch (key) {
-          case "i":
-            setSelectedFolder("INBOX");
-            setSelectedMessage(null);
-            break;
-          case "s":
-            setSelectedFolder("STARRED");
-            setSelectedMessage(null);
-            break;
-          case "e":
-            setSelectedFolder("SENT");
-            setSelectedMessage(null);
-            break;
-          case "d":
-            setSelectedFolder("DRAFT");
-            setSelectedMessage(null);
-            break;
-          case "p":
-            setSelectedFolder("PURCHASES");
-            setSelectedMessage(null);
-            break;
-          case "c":
-            setSelectedFolder("CALENDAR");
-            setSelectedMessage(null);
-            break;
-          case "a":
-            setSelectedFolder("AGENTS");
-            setSelectedMessage(null);
-            break;
-          case "o":
-            setSelectedFolder("SETTINGS");
-            setSelectedMessage(null);
-            break;
-          default:
-            matched = false;
-            break;
-        }
-        if (matched) {
+        const match = SHORTCUTS.find(s => s.ctrlKey === key);
+        if (match && match.category === "navigation") {
+          setSelectedFolder(match.id);
+          setSelectedMessage(null);
           e.preventDefault();
           return;
         }
@@ -134,70 +100,39 @@ export function InboxContainer({ user }: InboxContainerProps) {
 
       // 2. Sequential key navigation (using lastKeyPressedRef)
       if (lastKeyPressedRef.current === "g" || lastKeyPressedRef.current === "control") {
-        let matched = true;
-        switch (key) {
-          case "i":
-            setSelectedFolder("INBOX");
-            setSelectedMessage(null);
-            break;
-          case "s":
-            setSelectedFolder("STARRED");
-            setSelectedMessage(null);
-            break;
-          case "e":
-            setSelectedFolder("SENT");
-            setSelectedMessage(null);
-            break;
-          case "d":
-            setSelectedFolder("DRAFT");
-            setSelectedMessage(null);
-            break;
-          case "r":
-            setSelectedFolder("ARCHIVE");
-            setSelectedMessage(null);
-            break;
-          case "p":
-            setSelectedFolder("PURCHASES");
-            setSelectedMessage(null);
-            break;
-          case "c":
-            setSelectedFolder("CALENDAR");
-            setSelectedMessage(null);
-            break;
-          case "a":
-            setSelectedFolder("AGENTS");
-            setSelectedMessage(null);
-            break;
-          case "o":
-            setSelectedFolder("SETTINGS");
-            setSelectedMessage(null);
-            break;
-          default:
-            matched = false;
-            break;
-        }
-        if (matched) {
+        const match = SHORTCUTS.find(s => s.seqKey === key);
+        if (match && match.category === "navigation") {
+          setSelectedFolder(match.id);
+          setSelectedMessage(null);
           e.preventDefault();
+          lastKeyPressedRef.current = null;
+          if (timeoutRef.current) clearTimeout(timeoutRef.current);
+          return;
         }
-        lastKeyPressedRef.current = null;
-        if (timeoutRef.current) clearTimeout(timeoutRef.current);
-        return;
+        // If a sequence key was initiated but not followed by a matching sequence key
+        if (key !== "g" && key !== "control") {
+          lastKeyPressedRef.current = null;
+          if (timeoutRef.current) clearTimeout(timeoutRef.current);
+        }
       }
 
       // 3. Single key action shortcuts
-      if (key === "n") {
+      const composeShortcut = SHORTCUTS.find(s => s.id === "COMPOSE");
+      if (composeShortcut?.singleKeys?.includes(key)) {
         e.preventDefault();
         openCompose();
         return;
       }
 
-      if (key === "?" || key === "h") {
+      const helpShortcut = SHORTCUTS.find(s => s.id === "HELP");
+      if (helpShortcut?.singleKeys?.includes(key)) {
         e.preventDefault();
         setIsHelpOpen((prev) => !prev);
         return;
       }
 
-      if (e.key === "Escape") {
+      const closeShortcut = SHORTCUTS.find(s => s.id === "CLOSE");
+      if (closeShortcut?.singleKeys?.includes(key)) {
         if (isHelpOpen) {
           setIsHelpOpen(false);
           return;
