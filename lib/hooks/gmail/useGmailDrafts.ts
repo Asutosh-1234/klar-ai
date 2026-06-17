@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { ComposeAttachment, GmailMessage } from "@/lib/types";
 import { getHeader, getMessageBody, getAttachments } from "@/lib/utils/gmail";
+import { toast } from "sonner";
 
 interface UseGmailDraftsProps {
   onDraftSaved: () => void;
@@ -44,7 +45,7 @@ export function useGmailDrafts({ onDraftSaved, onDraftSent }: UseGmailDraftsProp
         if (data.details) {
           setValidationErrors(data.details);
         } else {
-          alert(data.error || "Failed to save draft");
+          toast.error(data.error || "Failed to save draft");
         }
         return null;
       }
@@ -60,7 +61,7 @@ export function useGmailDrafts({ onDraftSaved, onDraftSent }: UseGmailDraftsProp
       return data.draft;
     } catch (err) {
       console.error(err);
-      alert("Error saving draft");
+      toast.error("Error saving draft");
       return null;
     } finally {
       setIsSavingDraft(false);
@@ -112,7 +113,7 @@ export function useGmailDrafts({ onDraftSaved, onDraftSent }: UseGmailDraftsProp
           if (dataUpdate.details) {
             setValidationErrors(dataUpdate.details);
           } else {
-            alert(dataUpdate.error || "Failed to update draft");
+            toast.error(dataUpdate.error || "Failed to update draft");
           }
           setIsSending(false);
           return;
@@ -136,7 +137,7 @@ export function useGmailDrafts({ onDraftSaved, onDraftSent }: UseGmailDraftsProp
           if (dataSave.details) {
             setValidationErrors(dataSave.details);
           } else {
-            alert(dataSave.error || "Failed to create draft");
+            toast.error(dataSave.error || "Failed to create draft");
           }
           setIsSending(false);
           return;
@@ -146,7 +147,7 @@ export function useGmailDrafts({ onDraftSaved, onDraftSent }: UseGmailDraftsProp
       }
 
       if (!draftId) {
-        alert("Failed to retrieve saved draft ID.");
+        toast.error("Failed to retrieve saved draft ID.");
         setIsSending(false);
         return;
       }
@@ -172,12 +173,12 @@ export function useGmailDrafts({ onDraftSaved, onDraftSent }: UseGmailDraftsProp
       setComposeBody("");
       setAttachments([]);
       setActiveDraftId(null);
-      alert("Email sent successfully!");
+      toast.success("Email sent successfully!");
       onDraftSent();
     } catch (err: unknown) {
       console.error(err);
       const errMsg = err instanceof Error ? err.message : "Error sending email";
-      alert(errMsg);
+      toast.error(errMsg);
     } finally {
       setIsSending(false);
     }
@@ -201,12 +202,12 @@ export function useGmailDrafts({ onDraftSaved, onDraftSent }: UseGmailDraftsProp
         throw new Error(data.error || "Failed to send draft");
       }
 
-      alert("Draft sent successfully!");
+      toast.success("Draft sent successfully!");
       onDraftSent();
     } catch (err: unknown) {
       console.error(err);
       const errMsg = err instanceof Error ? err.message : "Error sending draft";
-      alert(errMsg);
+      toast.error(errMsg);
     } finally {
       setSendingDraftId(null);
     }
