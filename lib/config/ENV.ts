@@ -1,7 +1,36 @@
-import "dotenv/config"
+import "dotenv/config";
+import { execSync } from 'child_process';
+
+function resolveDatabaseUrl(url: string): string {
+  try {
+    const parsedUrl = new URL(url);
+    if (parsedUrl.hostname.includes("neon.tech")) {
+      const endpointId = parsedUrl.hostname.split('.')[0];
+      try {
+        const nslookupOutput = execSync(`nslookup ${parsedUrl.hostname}`, { encoding: 'utf8', stdio: ['pipe', 'pipe', 'ignore'] });
+        const parts = nslookupOutput.split(/Name:\s+/);
+        if (parts.length > 1) {
+          const resolvedPart = parts[1];
+          const ipv4s = resolvedPart.match(/\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b/g);
+          if (ipv4s && ipv4s.length > 0) {
+            parsedUrl.hostname = ipv4s[0];
+            parsedUrl.searchParams.set('options', `endpoint=${endpointId}`);
+            parsedUrl.searchParams.delete('sslmode');
+            return parsedUrl.toString();
+          }
+        }
+      } catch (e) {
+        // Ignore and fallback
+      }
+    }
+  } catch (err) {
+    // Ignore and fallback
+  }
+  return url;
+}
 
 class ENV{
-  static DATABASE_URL = this.required("DATABASE_URL")
+  static DATABASE_URL = resolveDatabaseUrl(this.required("DATABASE_URL"))
   static CORSAIR_KEK = this.required("CORSAIR_KEK")
   static GOOGLE_CLIENT_ID = this.required("GOOGLE_OAUTH_CLIENT_ID")
   static GOOGLE_CLIENT_SECRET = this.required("GOOGLE_OAUTH_CLIENT_SECRET")
