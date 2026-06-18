@@ -1,10 +1,10 @@
-import NextAuth from "next-auth"
 import GoogleProvider from "next-auth/providers/google"
 import ENV from "../config/ENV"
 import { handleSignIn, handleJwt, handleSession } from "./callbacks"
 
 
 export const authProvider = {
+  secret: ENV.NEXTAUTH_SECRET,
   providers: [
     GoogleProvider({
       clientId: ENV.GOOGLE_CLIENT_ID,
