@@ -14,9 +14,6 @@ import { redirect } from "next/navigation";
 export default async function Home() {
   const session = await getServerSession(authProvider);
 
-  if (session?.user) {
-    redirect("/index");
-  }
 
   return (
     <div className="relative min-h-screen bg-background text-on-background flex flex-col pt-16">
