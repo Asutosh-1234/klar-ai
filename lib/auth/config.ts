@@ -5,6 +5,27 @@ import { handleSignIn, handleJwt, handleSession } from "./callbacks"
 
 export const authProvider = {
   secret: ENV.NEXTAUTH_SECRET,
+  useSecureCookies: true,
+  cookies: {
+    pkceCodeVerifier: {
+      name: "next-auth.pkce.code_verifier",
+      options: {
+        httpOnly: true,
+        sameSite: "none",
+        path: "/",
+        secure: true,
+      },
+    },
+    state: {
+      name: "next-auth.state",
+      options: {
+        httpOnly: true,
+        sameSite: "none",
+        path: "/",
+        secure: true,
+      },
+    },
+  },
   providers: [
     GoogleProvider({
       clientId: ENV.GOOGLE_CLIENT_ID,
