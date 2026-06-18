@@ -22,7 +22,7 @@ const footerSections: FooterColumnProps[] = [
   {
     title: "Legal",
     links: [
-      { label: "Privacy", href: "#" },
+      { label: "Privacy", href: "/privacy" },
       { label: "Terms", href: "#" },
     ],
   },
