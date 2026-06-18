@@ -13,7 +13,7 @@ export function EmailRowActions({
   onEdit,
 }: EmailRowActionsProps) {
   return (
-    <div className={`hidden group-hover:flex items-center justify-end gap-1 w-full ${className}`}>
+    <div className={`flex items-center justify-end gap-1 w-full opacity-0 group-hover:opacity-100 transition-opacity duration-150 ${className}`}>
       {isDraft ? (
         <button
           type="button"

@@ -10,6 +10,34 @@ import { EmailTextContent } from "./EmailTextContent";
 import { EmailRowActions } from "./EmailRowActions";
 
 
+const formatDateTime = (value: string | number | undefined) => {
+  if (!value) return "";
+
+  const date =
+    typeof value === "number"
+      ? new Date(value)
+      : new Date(value);
+
+  const now = new Date();
+
+  const isToday =
+    date.toDateString() === now.toDateString();
+
+  if (isToday) {
+    return date.toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  }
+
+  return date.toLocaleString([], {
+    day: "2-digit",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
+
 
 export function MailList({
   messages,
@@ -98,9 +126,8 @@ export function MailList({
   ];
 
   return (
-    <div className={`flex flex-col bg-surface-sidebar h-full transition-all duration-300 ${
-      isSplitView ? "w-[400px] border-r border-white/5 shrink-0" : "flex-1"
-    }`}>
+    <div className={`flex flex-col bg-surface-sidebar h-full transition-all duration-300 ${isSplitView ? "w-[400px] border-r border-white/5 shrink-0" : "flex-1"
+      }`}>
       {/* Category Tabs / Header */}
       {isSplitView ? (
         // Split view left pane header
@@ -121,11 +148,10 @@ export function MailList({
                   key={cat.id}
                   type="button"
                   onClick={() => setSelectedCategory(cat.id)}
-                  className={`h-full border-b-2 flex items-center gap-2 px-1 transition-all group cursor-pointer ${
-                    isActive
-                      ? "border-primary text-primary font-medium"
-                      : "border-transparent text-on-surface-variant hover:text-on-surface"
-                  }`}
+                  className={`h-full border-b-2 flex items-center gap-2 px-1 transition-all group cursor-pointer ${isActive
+                    ? "border-primary text-primary font-medium"
+                    : "border-transparent text-on-surface-variant hover:text-on-surface"
+                    }`}
                 >
                   <span className="material-symbols-outlined text-[18px]">
                     {cat.icon}
@@ -239,9 +265,8 @@ export function MailList({
                   <div
                     key={msg.id}
                     onClick={() => onSelectMessage(msg)}
-                    className={`p-5 hover:bg-white/3 transition-all duration-200 hover:translate-x-1 cursor-pointer border-b border-white/5 relative ${
-                      isSelected ? "bg-white/5 border-l-4 border-primary" : "border-l-4 border-transparent"
-                    }`}
+                    className={`p-5 hover:bg-white/3 transition-all duration-200 hover:translate-x-1 cursor-pointer border-b border-white/5 relative ${isSelected ? "bg-white/5 border-l-4 border-primary" : "border-l-4 border-transparent"
+                      }`}
                   >
                     <div className="flex justify-between items-start mb-1">
                       <h3 className={`font-bold font-body-md truncate max-w-[220px] ${isUnread ? "text-white" : "text-on-surface-variant"}`}>
@@ -254,7 +279,7 @@ export function MailList({
                           </span>
                         )}
                         <span className="text-[10px] text-on-surface-variant opacity-60">
-                          {formatDate(dateVal)}
+                          {formatDateTime(dateVal)}
                         </span>
                       </div>
                     </div>
@@ -273,11 +298,10 @@ export function MailList({
                 <div
                   key={msg.id}
                   onClick={() => onSelectMessage(msg)}
-                  className={`email-row group flex items-center w-full overflow-hidden h-[42px] px-6 border-l-2 cursor-pointer border-b border-white/3 transition-all duration-150 ${
-                    isSelected
-                      ? "border-primary bg-primary/5"
-                      : "border-transparent hover:bg-white/2"
-                  }`}
+                  className={`email-row group flex items-center overflow-auto h-[42px] px-6 border-l-2 cursor-pointer border-b border-white/3 transition-all duration-150 ${isSelected
+                    ? "border-primary bg-primary/5"
+                    : "border-transparent hover:bg-white/2"
+                    }`}
                 >
                   {/* Checkbox + Star */}
                   <div className="flex items-center gap-4 w-16 shrink-0">
@@ -294,14 +318,19 @@ export function MailList({
                   </div>
 
                   {/* Sender Name */}
-                  <EmailSender name={displayName} isUnread={!!isUnread} />
+                  <EmailSender name={displayName} isUnread={!!isUnread} className="w-[180px] shrink-0"/>
 
                   {/* Subject + Snippet on a single line with " - " separator */}
-                  <div className="flex-1 flex items-center min-w-0 gap-2 pr-4">
+                  <div className="flex-1 min-w-0 overflow-hidden pr-3">
                     <EmailTextContent
-                      subject={subject}
+                      subject={
+                        subject.length > 45
+                          ? `${subject.substring(0, 45)}...`
+                          : subject
+                      }
                       snippet={msg.snippet || ""}
                       isUnread={!!isUnread}
+                      className="truncate"
                     />
                     {getAttachments(msg).length > 0 && (
                       <span className="material-symbols-outlined text-[16px] text-on-surface-variant/40 shrink-0" title="Has attachments">
@@ -311,12 +340,10 @@ export function MailList({
                   </div>
 
                   {/* Date / Hover Actions (Fixed Slot Width: 80px) */}
-                  <div className="w-20 shrink-0 flex justify-end text-right relative h-5 items-center">
-                    {/* Date */}
-                    <span className={`text-xs font-medium group-hover:hidden whitespace-nowrap ${isUnread ? "font-bold text-white" : "text-on-surface-variant"}`}>
+                  <div className="w-[140px] shrink-0 relative h-5">
+                    <span className={`absolute right-0 text-xs font-medium whitespace-nowrap transition-opacity duration-150 ${isUnread ? "font-bold text-white" : "text-on-surface-variant"} group-hover:opacity-0`}>
                       {formatDate(dateVal)}
                     </span>
-                    {/* Action Icons (fade in on hover in same slot) */}
                     <EmailRowActions
                       isUnread={!!isUnread}
                       onArchive={() => selectedFolder === "ARCHIVE" ? unarchiveMessages([msg.id!]) : archiveMessage(msg.id!)}
@@ -325,6 +352,7 @@ export function MailList({
                       isArchived={selectedFolder === "ARCHIVE"}
                       isDraft={isDraft}
                       onEdit={() => onEditDraft?.(msg)}
+                      className="absolute inset-0"
                     />
                   </div>
                 </div>
