@@ -12,7 +12,10 @@ export function IntegrationCard({
   connectActionText,
 }: IntegrationCardProps) {
   return (
-    <div
+    <>
+    {/* Hidden on small screens to improve responsiveness; visible on md... */}
+    <aside className="hidden md:flex w-64 shrink-0 flex-col h-full py-8 ...">
+      <div
       className={`glass-card rounded-xl p-8 flex flex-col justify-between interactive-card border glow-accent ${
         isConnected ? "border-primary/20 bg-primary/5" : "border-white/4"
       }`}
@@ -91,5 +94,7 @@ export function IntegrationCard({
         </a>
       )}
     </div>
+    </aside>
+  </>
   );
 }

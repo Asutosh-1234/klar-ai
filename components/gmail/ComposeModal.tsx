@@ -11,7 +11,6 @@ import { ComposeToolbar } from "./ComposeToolbar";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Placeholder from "@tiptap/extension-placeholder";
-import Underline from "@tiptap/extension-underline";
 
 // Icons for formatting toolbar
 import { 
@@ -57,7 +56,6 @@ export function ComposeModal({
   const editor = useEditor({
     extensions: [
       StarterKit,
-      Underline,
       Placeholder.configure({
         placeholder: "Write your email here...",
         emptyEditorClass: 'is-editor-empty',

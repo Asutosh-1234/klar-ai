@@ -50,6 +50,12 @@ export function useGmailInbox() {
         res = await fetch(`/api/gmail?q=${encodeURIComponent(q)}`);
       }
 
+      if (res.status === 204) {
+        setMessages([]);
+        setSelectedMessage(null);
+        setLoading(false);
+        return;
+      }
       if (!res.ok) {
         throw new Error(`Failed to fetch emails: ${res.statusText}`);
       }

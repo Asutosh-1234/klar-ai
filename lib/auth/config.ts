@@ -2,27 +2,28 @@ import GoogleProvider from "next-auth/providers/google"
 import ENV from "../config/ENV"
 import { handleSignIn, handleJwt, handleSession } from "./callbacks"
 
+const isProduction = ENV.NEXTAUTH_URL.startsWith('https');
 
 export const authProvider = {
   secret: ENV.NEXTAUTH_SECRET,
-  useSecureCookies: true,
+  useSecureCookies: isProduction,
   cookies: {
     pkceCodeVerifier: {
       name: "next-auth.pkce.code_verifier",
       options: {
         httpOnly: true,
-        sameSite: "none",
+        sameSite: isProduction ? "none" : "lax",
         path: "/",
-        secure: true,
+        secure: isProduction,
       },
     },
     state: {
       name: "next-auth.state",
       options: {
         httpOnly: true,
-        sameSite: "none",
+        sameSite: isProduction ? "none" : "lax",
         path: "/",
-        secure: true,
+        secure: isProduction,
       },
     },
   },

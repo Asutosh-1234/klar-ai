@@ -10,7 +10,9 @@ import Link from "next/link";
 
 export default async function GmailPage() {
   const session = await getServerSession(authProvider);
-  if (!session?.user?.id) {
+  if (!session?.user) {
+    console.log(!session?.user);
+    
     redirect("/");
   }
 

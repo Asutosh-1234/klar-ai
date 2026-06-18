@@ -26,9 +26,10 @@ export async function GET(request: NextRequest) {
       includeSpamTrash: true,
       labelIds
     });
+    
 
-    if (!messages || messages.length === 0) {
-      return NextResponse.json({ messages: [] });
+    if (!messages || messages.length === 0) {      
+      return NextResponse.json({ messages: [], connected: true });
     }
 
     const enrichedMessages = await Promise.all(
