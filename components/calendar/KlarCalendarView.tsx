@@ -157,7 +157,7 @@ export function KlarCalendarView() {
         onClick={() => setIsModalOpen(true)}
         className="fixed bottom-6 right-6 w-14 h-14 bg-primary text-on-primary rounded-full shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-transform gold-glow z-50 cursor-pointer"
       >
-        <span className="material-symbols-outlined text-[28px]">add</span>
+        <span className="material-symbols-outlined text-black text-[34px]">add</span>
       </button>
 
       {/* Event Creation Modal */}

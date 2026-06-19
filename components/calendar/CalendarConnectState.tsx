@@ -1,7 +1,5 @@
 'use client'
 
-import React from 'react';
-
 export function CalendarConnectState() {
   return (
     <div className="flex-1 flex flex-col items-center justify-center p-6 bg-surface-container-lowest text-on-surface text-center relative h-full">
