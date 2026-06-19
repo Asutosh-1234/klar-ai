@@ -37,7 +37,7 @@ export function InboxSidebar({
       
       {/* Brand Header */}
       <div className="px-6 mb-8">
-        <h1 className="font-headline-sm text-lg font-bold text-primary tracking-tight">Aether OS</h1>
+        <h1 className="font-headline-sm text-lg font-bold text-primary tracking-tight">Klar OS</h1>
         <p className="text-[9px] font-semibold text-on-surface-variant opacity-60 tracking-wider uppercase">Premium AI Agent</p>
       </div>
 

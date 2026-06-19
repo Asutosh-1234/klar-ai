@@ -2,8 +2,8 @@
 
 import { useState } from 'react';
 
-export function AetherSettingsView() {
-  const [model, setModel] = useState('aether-1.5-pro');
+export function KlarSettingsView() {
+  const [model, setModel] = useState('klar-1.5-pro');
   const [notifications, setNotifications] = useState(true);
   const [autoDraft, setAutoDraft] = useState(true);
 
@@ -15,11 +15,11 @@ export function AetherSettingsView() {
         <div>
           <div className="flex items-center gap-2 text-primary mb-1">
             <span className="material-symbols-outlined text-sm">settings</span>
-            <span className="text-[10px] font-bold uppercase tracking-widest">Aether System Parameters</span>
+            <span className="text-[10px] font-bold uppercase tracking-widest">Klar System Parameters</span>
           </div>
           <h2 className="font-display text-3xl font-semibold text-white">Settings</h2>
           <p className="text-xs text-on-surface-variant mt-2 max-w-md opacity-80 leading-relaxed">
-            Configure Aether Executive Operating System defaults, AI models, and email/calendar synchronization.
+            Configure Klar Executive Operating System defaults, AI models, and email/calendar synchronization.
           </p>
         </div>
 
@@ -37,8 +37,8 @@ export function AetherSettingsView() {
               onChange={(e) => setModel(e.target.value)}
               className="bg-surface-container-lowest border border-white/10 rounded px-3 py-1.5 text-xs text-white focus:outline-none focus:border-primary select-none cursor-pointer"
             >
-              <option value="aether-1.5-pro">Aether 1.5 Pro Ultra (Default)</option>
-              <option value="aether-1.5-flash">Aether 1.5 Flash (Low Latency)</option>
+              <option value="klar-1.5-pro">Klar 1.5 Pro Ultra (Default)</option>
+              <option value="klar-1.5-flash">Klar 1.5 Flash (Low Latency)</option>
               <option value="gemini-experimental">Gemini Experimental (Advanced Reasoning)</option>
             </select>
           </div>
@@ -84,7 +84,7 @@ export function AetherSettingsView() {
             <div className="flex items-center justify-between py-2">
               <div>
                 <h5 className="text-xs font-semibold text-white">Push Cognitive Insights</h5>
-                <p className="text-[10px] text-on-surface-variant opacity-60 mt-0.5">Display toast notifications when Aether optimizes calendars or flags billing run-rates.</p>
+                <p className="text-[10px] text-on-surface-variant opacity-60 mt-0.5">Display toast notifications when Klar optimizes calendars or flags billing run-rates.</p>
               </div>
               <input
                 type="checkbox"

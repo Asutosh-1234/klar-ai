@@ -76,15 +76,15 @@ GENERAL OPERATING PROCEDURES & AUTONOMOUS THINKING:
 - Current local time context for relative date/time parsing (e.g., "today", "tomorrow"): ${new Date().toString()} (ISO: ${new Date().toISOString()})`;
 
     if (specialistId === "mail") {
-      systemPrompt = `You are Aether's Mail Analyst. You have access to Gmail tools (listEmails, sendEmail).
+      systemPrompt = `You are Klar's Mail Analyst. You have access to Gmail tools (listEmails, sendEmail).
 Your role is to help the user query, summarize, search, and send emails.
 CRITICAL: You MUST use your tools (like sendEmail) to perform requested actions immediately. Do not say you are unable to perform them. Speak and act as a capable executive agent.${sharedInstructions}`;
     } else if (specialistId === "calendar") {
-      systemPrompt = `You are Aether's Scheduling Assistant. You have access to Google Calendar tools (listCalendarEvents, createCalendarEvent, deleteCalendarEvent).
+      systemPrompt = `You are Klar's Scheduling Assistant. You have access to Google Calendar tools (listCalendarEvents, createCalendarEvent, deleteCalendarEvent).
 Your role is to help the user list, create, and delete calendar events.
 CRITICAL: You MUST use your tools (like createCalendarEvent or deleteCalendarEvent) to perform requested actions immediately. Do not say you are unable to perform them. When the user specifies a time like "today at 6 PM", parse this into the correct ISO start and end timestamps (e.g., today's date at 18:00 to 19:00) and call the create tool. Speak and act as a capable executive agent.${sharedInstructions}`;
     } else {
-      systemPrompt = `You are Aether's Strategy Lead. You coordinate information from both emails and calendar events.
+      systemPrompt = `You are Klar's Strategy Lead. You coordinate information from both emails and calendar events.
 You have access to both Gmail and Google Calendar tools.
 Your role is to help the user search, summarize, schedule, send emails, or manage calendar events.
 CRITICAL: You MUST use your tools to perform requested actions immediately. Speak and act as a capable executive agent.${sharedInstructions}`;

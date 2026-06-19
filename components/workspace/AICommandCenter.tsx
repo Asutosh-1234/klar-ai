@@ -10,7 +10,7 @@ export function AICommandCenter() {
     {
       id: 'welcome',
       role: 'assistant',
-      text: 'Hello! I am Aether AI. I can manage your inbox and calendar. Try asking me to send an email, list meetings, or clean up emails.',
+      text: 'Hello! I am Klar AI. I can manage your inbox and calendar. Try asking me to send an email, list meetings, or clean up emails.',
     }
   ]);
   const [loading, setLoading] = useState(false);
@@ -148,7 +148,7 @@ export function AICommandCenter() {
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
             <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-primary"></span>
           </span>
-          <span className="text-[10px] font-bold text-primary tracking-widest uppercase">Aether OS Coordinator</span>
+          <span className="text-[10px] font-bold text-primary tracking-widest uppercase">Klar OS Coordinator</span>
         </div>
         <button 
           onClick={() => setIsOpen(false)} 
@@ -262,7 +262,7 @@ export function AICommandCenter() {
             value={command}
             onChange={(e) => setCommand(e.target.value)}
             disabled={loading}
-            placeholder={limitInfo && limitInfo.used >= limitInfo.limit ? "Limit reached. Upgrade plan." : "Command Aether AI..."}
+            placeholder={limitInfo && limitInfo.used >= limitInfo.limit ? "Limit reached. Upgrade plan." : "Command Klar AI..."}
             className="w-full bg-surface-container-lowest border border-white/10 rounded-lg pl-3 pr-10 py-2 text-xs text-white focus:outline-none focus:border-primary transition-all placeholder:text-on-surface-variant/40 disabled:opacity-40 disabled:cursor-not-allowed"
           />
           <button

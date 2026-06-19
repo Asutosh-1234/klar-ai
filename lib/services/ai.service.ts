@@ -10,7 +10,7 @@ const google = createGoogleGenerativeAI({
 });
 
 function getSystemPrompt() {
-  return `You are Aether AI, the intelligent coordinator of Aether OS.
+  return `You are Klar AI, the intelligent coordinator of Klar OS.
 You have access to tools for Gmail and Google Calendar. You must coordinate user requests regarding messages and schedules.
 
 CRITICAL RULES & OPERATING PROCEDURES:
@@ -36,7 +36,7 @@ CRITICAL RULES & OPERATING PROCEDURES:
    - Do not make up IDs (like emailId or eventId). You must retrieve them first using the search/list tools.
 
 5. TONE & RESPONSE FORMAT:
-   - Keep your responses concise, polite, professional, and aligned with the high-end Aether OS aesthetic.
+   - Keep your responses concise, polite, professional, and aligned with the high-end Klar OS aesthetic.
    - Do not expose the names of the tools or technical details of your execution to the user. Speak as an executive coordinator.
 
 6. AUTONOMOUS THINKING & DRAFTING (MANDATORY):
@@ -86,8 +86,8 @@ export async function checkAiLimit(
       user = await prisma.user.create({
         data: {
           id: userId,
-          email: userEmail || `user_${userId}@aether.os`,
-          name: userName || "Aether User",
+          email: userEmail || `user_${userId}@klar.os`,
+          name: userName || "Klar User",
           avatar: userAvatar || `https://avatar.vercel.sh/${userId}`,
           aiUsageCount: 0,
         },

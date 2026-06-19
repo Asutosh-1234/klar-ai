@@ -5,7 +5,7 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme {
-  /* Primary (Aether Gold) */
+  /* Primary (Klar Gold) */
   --color-primary: #F2CA50;
   --color-primary-hover: #FFE088;
   --color-primary-container: rgba(242, 202, 80, 0.12);

@@ -8,9 +8,9 @@ import { ComposeModal } from "../gmail/ComposeModal";
 import { MailList } from "../gmail/MailList";
 import { MailDetails } from "../gmail/MailDetails";
 import { AICommandCenter } from "./AICommandCenter";
-import { AetherCalendarView } from "../calendar/AetherCalendarView";
-import { AetherAgentsView } from "../agents/AetherAgentsView";
-import { AetherSettingsView } from "./AetherSettingsView";
+import { KlarCalendarView } from "../calendar/KlarCalendarView";
+import { KlarAgentsView } from "../agents/KlarAgentsView";
+import { KlarSettingsView } from "./KlarSettingsView";
 import { ShortcutsHelpModal } from "./ShortcutsHelpModal";
 import { SHORTCUTS } from "@/lib/config/shortcuts";
 
@@ -344,11 +344,11 @@ export function InboxContainer({ user }: InboxContainerProps) {
         {/* Content Area Rendering */}
         <div className="flex flex-1 overflow-hidden min-w-0">
           {selectedFolder === "CALENDAR" ? (
-            <AetherCalendarView />
+            <KlarCalendarView />
           ) : selectedFolder === "AGENTS" ? (
-            <AetherAgentsView user={user} />
+            <KlarAgentsView user={user} />
           ) : selectedFolder === "SETTINGS" ? (
-            <AetherSettingsView />
+            <KlarSettingsView />
           ) : (
             <>
               {/* Email List Pane */}

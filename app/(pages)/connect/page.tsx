@@ -55,17 +55,17 @@ export default async function ConnectPage() {
               <span className="material-symbols-outlined text-primary text-4xl font-bold">check_circle</span>
             </div>
             <h1 className="text-2xl font-bold tracking-tight text-white mb-3">
-              Aether OS Workspace is Ready
+              Klar OS Workspace is Ready
             </h1>
             <p className="text-xs text-on-surface-variant leading-relaxed mb-8 max-w-xs opacity-80">
-              Your Gmail and Google Calendar are successfully synchronized. Aether OS is ready to orchestrate your communications, summarize schedules, and automate actions.
+              Your Gmail and Google Calendar are successfully synchronized. Klar OS is ready to orchestrate your communications, summarize schedules, and automate actions.
             </p>
             <Link
               href="/index"
               className="w-full py-3.5 bg-primary hover:bg-primary-hover active:scale-[0.98] transition-all text-surface-sidebar rounded-lg text-xs font-bold flex items-center justify-center gap-2 shadow-[0_4px_16px_rgba(242,202,80,0.25)] hover:shadow-[0_6px_20px_rgba(242,202,80,0.35)] cursor-pointer"
             >
               <span className="material-symbols-outlined text-xs font-bold">rocket_launch</span>
-              Enter Aether OS Workspace
+              Enter Klar OS Workspace
             </Link>
           </div>
         ) : (

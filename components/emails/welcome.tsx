@@ -41,7 +41,7 @@ export function WelcomeEmail({ firstName, email, avatar }: WelcomeEmailProps) {
           marginBottom: '16px',
           letterSpacing: '-0.5px',
         }}>
-          Welcome to Aether OS, {firstName}!
+          Welcome to Klar OS, {firstName}!
         </h1>
         <p style={{
           fontSize: '16px',
@@ -49,7 +49,7 @@ export function WelcomeEmail({ firstName, email, avatar }: WelcomeEmailProps) {
           color: '#E4E1E9',
           marginBottom: '24px',
         }}>
-          We're excited to have you on board. Aether OS is your premium AI agent platform, bringing elite clarity, unified communication, and cognitive workflow automation to your daily operations.
+          We're excited to have you on board. Klar OS is your premium AI agent platform, bringing elite clarity, unified communication, and cognitive workflow automation to your daily operations.
         </p>
         <div style={{
           backgroundColor: 'rgba(255, 255, 255, 0.03)',

@@ -31,7 +31,7 @@ export function ShortcutsOverview() {
             Command Klar at the speed of thought.
           </h2>
           <p className="font-body-lg text-body-lg text-on-surface-variant max-w-2xl">
-            Aether OS is built around a keyboard-first philosophy. Use hotkeys to fly through your communication pipeline and trigger background workflows instantly.
+            Klar OS is built around a keyboard-first philosophy. Use hotkeys to fly through your communication pipeline and trigger background workflows instantly.
           </p>
         </div>
 
@@ -108,7 +108,7 @@ export function ShortcutsOverview() {
               <div>
                 <h4 className="text-sm font-semibold text-white mb-1">Interactive Help Overlay</h4>
                 <p className="text-xs text-on-surface-variant leading-relaxed">
-                  Lost track of a shortcut? Just press <KeyCap>?</KeyCap> or <KeyCap>h</KeyCap> anywhere in Aether OS to trigger the interactive shortcuts overlay dashboard instantly.
+                  Lost track of a shortcut? Just press <KeyCap>?</KeyCap> or <KeyCap>h</KeyCap> anywhere in Klar OS to trigger the interactive shortcuts overlay dashboard instantly.
                 </p>
               </div>
             </div>

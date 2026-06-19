@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { GoogleEvent } from '@/lib/types';
 
-export function AetherCalendarView() {
+export function KlarCalendarView() {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [events, setEvents] = useState<GoogleEvent[]>([]);
   const [loading, setLoading] = useState(true);

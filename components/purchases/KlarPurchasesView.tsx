@@ -7,7 +7,7 @@ import { PurchaseFilterBar } from './PurchaseFilterBar';
 import { TransactionTable } from './TransactionTable';
 import { PurchaseInsights } from './PurchaseInsights';
 
-export function AetherPurchasesView() {
+export function KlarPurchasesView() {
   const [activeFilter, setActiveFilter] = useState<'All' | 'Receipts' | 'Invoices' | 'Confirmations'>('All');
 
   const transactions: Transaction[] = [];

@@ -11,7 +11,7 @@ const openrouter = createOpenAI({
 async function main() {
   console.log("Testing embedding generation and DB insert...");
   try {
-    const text = "Testing Aether AI Agent Search and Vector DB Integration.";
+    const text = "Testing Klar AI Agent Search and Vector DB Integration.";
     const { embedding } = await embed({
       model: openrouter.embedding("openai/text-embedding-3-small"),
       value: text,

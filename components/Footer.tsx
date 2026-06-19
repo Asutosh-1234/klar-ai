@@ -43,10 +43,10 @@ export function Footer() {
         <div className="col-span-2 lg:col-span-2 flex flex-col gap-6">
           <div className="font-headline-md text-headline-md font-bold text-on-background flex items-center gap-1.5">
             <span className="material-symbols-outlined text-primary text-[20px] font-bold">stars</span>
-            Aether
+            Klar
           </div>
           <p className="text-on-surface-variant max-w-xs">The premium AI operating system for modern executives.</p>
-          <p className="text-on-surface-variant/50 text-sm mt-auto">© 2024 Aether AI. SOC2 Type II Certified.</p>
+          <p className="text-on-surface-variant/50 text-sm mt-auto">© 2024 Klar AI. SOC2 Type II Certified.</p>
         </div>
         {footerSections.map((section) => (
           <FooterColumn key={section.title} {...section} />

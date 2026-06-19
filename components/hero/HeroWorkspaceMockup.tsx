@@ -19,7 +19,7 @@ export function HeroWorkspaceMockup() {
             <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/20 border border-yellow-500/40"></div>
             <div className="w-2.5 h-2.5 rounded-full bg-green-500/20 border border-green-500/40"></div>
           </div>
-          <div className="font-mono text-[9px] text-on-surface/40 tracking-wider">Aether Workspace</div>
+          <div className="font-mono text-[9px] text-on-surface/40 tracking-wider">Klar Workspace</div>
           <div className="w-8"></div>
         </div>
 

@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { UserProfile } from '@/lib/types';
 import { toast } from 'sonner';
 
-export interface AetherAgentsViewProps {
+export interface KlarAgentsViewProps {
   user?: UserProfile;
 }
 
@@ -156,7 +156,7 @@ function FormattedText({ text }: { text: string }) {
   );
 }
 
-export function AetherAgentsView({ user }: AetherAgentsViewProps) {
+export function KlarAgentsView({ user }: KlarAgentsViewProps) {
   const [activeId, setActiveId] = useState<'strategy' | 'calendar' | 'mail'>('strategy');
   const [searchQuery, setSearchQuery] = useState("");
   const [inputValue, setInputValue] = useState("");
@@ -641,7 +641,7 @@ export function AetherAgentsView({ user }: AetherAgentsViewProps) {
                 </button>
                 <button 
                   type="button"
-                  onClick={() => toast.info("Aether vision processing is disabled.")}
+                  onClick={() => toast.info("Klar vision processing is disabled.")}
                   className="p-1 rounded-lg hover:bg-white/5 transition-all material-symbols-outlined text-base hover:text-white cursor-pointer"
                 >
                   image
