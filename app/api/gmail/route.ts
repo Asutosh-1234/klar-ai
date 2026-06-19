@@ -60,11 +60,35 @@ export async function GET(request: NextRequest) {
       if (!messages || messages.length === 0) {      
         finalMessages = [];
       } else {
+        // Load existing messages from the database to map and avoid redundant network requests
+        const dbMails = await searchMailsFromDb(tenantId);
+        const dbMailsMap = new Map<string, any>();
+        for (const mail of dbMails) {
+          if (mail.id) {
+            dbMailsMap.set(mail.id, mail);
+          }
+        }
+
         const enrichedMessages = await Promise.all(
           messages.map(async (msg: { id?: string | null; threadId?: string | null }) => {
             if (!msg.id) return null;
             try {
-              const fullMsg = await getMessageDetails(tenantId, msg.id);
+              // Retrieve from DB cache if metadata (headers) exists
+              if (dbMailsMap.has(msg.id)) {
+                const dbMsg = dbMailsMap.get(msg.id);
+                if (dbMsg.labelIds && dbMsg.payload?.headers) {
+                  const isTrash = dbMsg.labelIds.includes("TRASH");
+                  const isSpam = dbMsg.labelIds.includes("SPAM");
+                  const isTrashQuery = q && (q.includes("label:TRASH") || q.includes("in:trash"));
+                  const isSpamQuery = q && (q.includes("label:SPAM") || q.includes("in:spam"));
+
+                  if (isTrash && !isTrashQuery) return null;
+                  if (isSpam && !isSpamQuery) return null;
+                  return dbMsg;
+                }
+              }
+
+              const fullMsg = await getMessageDetails(tenantId, msg.id, "metadata");
               if (fullMsg && fullMsg.labelIds) {
                 const isTrash = fullMsg.labelIds.includes("TRASH");
                 const isSpam = fullMsg.labelIds.includes("SPAM");
@@ -86,7 +110,16 @@ export async function GET(request: NextRequest) {
     }
 
     const response = NextResponse.json({
-      messages: finalMessages,
+      messages: finalMessages.map((msg: any) => ({
+        id: msg.id,
+        threadId: msg.threadId,
+        labelIds: msg.labelIds,
+        snippet: msg.snippet,
+        internalDate: msg.internalDate,
+        payload: {
+          headers: msg.payload?.headers || []
+        }
+      })),
       connected: true
     });
 

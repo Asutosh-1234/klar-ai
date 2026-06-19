@@ -41,6 +41,7 @@ class ENV{
   static AI_API_KEY = this.required('AI_API_KEY')
   static VERCEL_API_KEY = this.required('AI_GATEWAY_API_KEY')
   static NEXTAUTH_SECRET = this.required('NEXTAUTH_SECRET')
+  static GEMINI_API_KEY = this.required('GEMINI_API_KEY')
 
   static required(name:string){
     const value = process.env[name]

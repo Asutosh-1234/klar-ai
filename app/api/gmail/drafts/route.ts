@@ -10,17 +10,24 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get("id");
+    if (id) {
+      const draft = await getDraftDetails(tenantId, id, "full");
+      return NextResponse.json(draft);
+    }
+
     const drafts = await getAllDraftMails(tenantId);
     if (!drafts || drafts.length === 0) {
       return NextResponse.json({ drafts: [] });
     }
 
-    // Enrich drafts by fetching full details for each
+    // Enrich drafts by fetching metadata details for each
     const enrichedDrafts = await Promise.all(
       drafts.map(async (draft: { id?: string | null }) => {
         if (!draft.id) return null;
         try {
-          const fullDraft = await getDraftDetails(tenantId, draft.id);
+          const fullDraft = await getDraftDetails(tenantId, draft.id, "metadata");
           return fullDraft;
         } catch (err) {
           console.error(`Failed to get details for draft ${draft.id}:`, err);
@@ -29,8 +36,22 @@ export async function GET(request: NextRequest) {
       })
     );
 
+    const finalDrafts = enrichedDrafts.filter(Boolean);
+
     return NextResponse.json({
-      drafts: enrichedDrafts.filter(Boolean)
+      drafts: finalDrafts.map((d: any) => ({
+        id: d.id,
+        message: {
+          id: d.message?.id,
+          threadId: d.message?.threadId,
+          labelIds: d.message?.labelIds,
+          snippet: d.message?.snippet,
+          internalDate: d.message?.internalDate,
+          payload: {
+            headers: d.message?.payload?.headers || []
+          }
+        }
+      }))
     });
   } catch (error: unknown) {
     console.error("Error in GET /api/gmail/drafts:", error);

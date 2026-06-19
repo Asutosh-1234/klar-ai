@@ -14,6 +14,7 @@
     "db:reset": "bunx --bun prisma migrate reset &&bunx --bun prisma db push &&bunx --bun prisma generate"
   },
   "dependencies": {
+    "@ai-sdk/google": "^3.0.83",
     "@ai-sdk/openai": "^3.0.71",
     "@base-ui/react": "^1.5.0",
     "@corsair-dev/app": "^0.1.5",

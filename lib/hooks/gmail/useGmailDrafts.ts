@@ -225,13 +225,29 @@ export function useGmailDrafts({ onDraftSaved, onDraftSent }: UseGmailDraftsProp
 
   const openComposeForDraft = async (msg: GmailMessage) => {
     setValidationErrors({});
-    setActiveDraftId(msg.draftId || null);
-    setComposeTo(getHeader(msg, "to") || "");
-    setComposeSubject(getHeader(msg, "subject") || "");
-    setComposeBody(getMessageBody(msg.payload) || "");
+    let fullMsg = msg;
+    if (msg.draftId && !(msg.payload?.body?.data || msg.payload?.parts)) {
+      try {
+        const res = await fetch(`/api/gmail/drafts?id=${msg.draftId}`);
+        if (res.ok) {
+          const draftRes = await res.json();
+          fullMsg = {
+            ...draftRes.message,
+            draftId: draftRes.id,
+            id: draftRes.message?.id || draftRes.id
+          };
+        }
+      } catch (err) {
+        console.error("Failed to fetch full draft details:", err);
+      }
+    }
+    setActiveDraftId(fullMsg.draftId || null);
+    setComposeTo(getHeader(fullMsg, "to") || "");
+    setComposeSubject(getHeader(fullMsg, "subject") || "");
+    setComposeBody(getMessageBody(fullMsg.payload) || "");
     setIsComposeOpen(true);
 
-    const msgAttachments = getAttachments(msg);
+    const msgAttachments = getAttachments(fullMsg);
     if (msgAttachments.length > 0) {
       setAttachments(
         msgAttachments.map((att) => ({

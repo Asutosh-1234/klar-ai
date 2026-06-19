@@ -1,6 +1,6 @@
 import { NextResponse, NextRequest } from "next/server";
 import { getSessionTenantId } from "@/lib/auth/session";
-import { getArchivedMails, getMessageDetails, removeFromArchive } from "@/lib/services/gmail.service";
+import { getArchivedMails, getMessageDetails, removeFromArchive, searchMailsFromDb } from "@/lib/services/gmail.service";
 
 export async function GET(request: NextRequest) {
   try {
@@ -24,12 +24,28 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ messages: [] });
     }
 
-    // Enrich messages by fetching full detail for each message
+    // Load existing messages from database to avoid redundant network calls
+    const dbMails = await searchMailsFromDb(tenantId);
+    const dbMailsMap = new Map<string, any>();
+    for (const mail of dbMails) {
+      if (mail.id) {
+        dbMailsMap.set(mail.id, mail);
+      }
+    }
+
+    // Enrich messages by fetching metadata detail for each message
     const enrichedMessages = await Promise.all(
       messages.map(async (msg: { id?: string | null }) => {
         if (!msg.id) return null;
         try {
-          const fullMsg = await getMessageDetails(tenantId, msg.id);
+          if (dbMailsMap.has(msg.id)) {
+            const dbMsg = dbMailsMap.get(msg.id);
+            if (dbMsg.labelIds && dbMsg.payload?.headers) {
+              return dbMsg;
+            }
+          }
+
+          const fullMsg = await getMessageDetails(tenantId, msg.id, "metadata");
           return fullMsg;
         } catch (err) {
           console.error(`Failed to get details for message ${msg.id}:`, err);
@@ -38,8 +54,19 @@ export async function GET(request: NextRequest) {
       })
     );
 
+    const finalMessages = enrichedMessages.filter(Boolean);
+
     return NextResponse.json({
-      messages: enrichedMessages.filter(Boolean)
+      messages: finalMessages.map((msg: any) => ({
+        id: msg.id,
+        threadId: msg.threadId,
+        labelIds: msg.labelIds,
+        snippet: msg.snippet,
+        internalDate: msg.internalDate,
+        payload: {
+          headers: msg.payload?.headers || []
+        }
+      }))
     });
   } catch (error: unknown) {
     console.error("Error in GET /api/gmail/archive:", error);

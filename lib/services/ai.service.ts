@@ -1,13 +1,12 @@
 import { generateText, stepCountIs } from "ai";
-import { createOpenAI } from "@ai-sdk/openai";
+import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { prisma } from "@/lib/config/prisma";
 import ENV from "@/lib/config/ENV";
 import { inngest } from "@/lib/inngest/client";
 import { getAiTools } from "./ai-tools";
 
-const openrouter = createOpenAI({
-  baseURL: "https://openrouter.ai/api/v1",
-  apiKey: ENV.AI_API_KEY,
+const google = createGoogleGenerativeAI({
+  apiKey: ENV.GEMINI_API_KEY,
 });
 
 function getSystemPrompt() {
@@ -135,7 +134,7 @@ export const executeAiCommand = async ({
   let pendingDeleteInfo: any = null;
 
   const response = await generateText({
-    model: openrouter.chat("google/gemini-2.0-flash-exp:free"),
+    model: google("gemini-2.5-flash"),
     maxOutputTokens: 800,
     system: getSystemPrompt(),
     prompt: command,
@@ -187,7 +186,7 @@ export const executeAiCommand = async ({
 // Deprecated in favor of executeAiCommand, kept for backwards compatibility
 export const aiService = async ({ prompt }: { prompt: string }) => {
   const response = await generateText({
-    model: openrouter.chat("google/gemini-2.0-flash-exp:free"),
+    model: google("gemini-2.5-flash"),
     maxOutputTokens: 500,
     prompt,
   });

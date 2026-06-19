@@ -1,6 +1,6 @@
 import { tool } from "ai";
 import { z } from "zod";
-import { getAllMails, getMessageDetails } from "./gmail.service";
+import { getAllMails, getMessageDetails, searchMailsFromDb } from "./gmail.service";
 import { sendMimeEmail } from "./gmail-helper";
 import { getAllEvents, createEvent, deleteEvent } from "./calendar.service";
 
@@ -21,15 +21,30 @@ export function listEmailsTool(tenantId: string) {
           includeSpamTrash: true,
           labelIds: ["INBOX"],
         });
+
+        // Load existing messages from database to avoid redundant network calls
+        const dbMails = await searchMailsFromDb(tenantId);
+        const dbMailsMap = new Map<string, any>();
+        for (const mail of dbMails) {
+          if (mail.id) {
+            dbMailsMap.set(mail.id, mail);
+          }
+        }
+
         const enriched = await Promise.all(
           messages.slice(0, 5).map(async (msg: any) => {
             if (!msg.id) return null;
             try {
-              const details = await getMessageDetails(tenantId, msg.id);
+              let details;
+              if (dbMailsMap.has(msg.id)) {
+                details = dbMailsMap.get(msg.id);
+              } else {
+                details = await getMessageDetails(tenantId, msg.id, "metadata");
+              }
               return {
                 id: details.id,
-                subject: details.payload?.headers?.find((h: any) => h.name === "Subject")?.value || "No Subject",
-                sender: details.payload?.headers?.find((h: any) => h.name === "From")?.value || "Unknown",
+                subject: details.payload?.headers?.find((h: any) => h.name.toLowerCase() === "subject")?.value || "No Subject",
+                sender: details.payload?.headers?.find((h: any) => h.name.toLowerCase() === "from")?.value || "Unknown",
                 snippet: details.snippet,
               };
             } catch {

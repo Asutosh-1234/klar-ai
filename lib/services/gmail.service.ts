@@ -65,10 +65,15 @@ export const getAllDraftMails = async (tenantId: string, userId?: string) => {
   return mails.drafts || [];
 }
 
-export const getMessageDetails = async (tenantId: string, messageId: string) => {
+export const getMessageDetails = async (
+  tenantId: string,
+  messageId: string,
+  format?: "minimal" | "full" | "raw" | "metadata"
+) => {
   return await handleGmailCall(
     corsair.withTenant(tenantId).gmail.api.messages.get({
       id: messageId,
+      format: format || undefined,
     })
   );
 }
@@ -95,10 +100,15 @@ export const trashMessage = async (tenantId: string, messageId: string) => {
   );
 }
 
-export const getDraftDetails = async (tenantId: string, draftId: string) => {
+export const getDraftDetails = async (
+  tenantId: string,
+  draftId: string,
+  format?: "minimal" | "full" | "raw" | "metadata"
+) => {
   return await handleGmailCall(
     corsair.withTenant(tenantId).gmail.api.drafts.get({
       id: draftId,
+      format: format || undefined,
     })
   );
 }

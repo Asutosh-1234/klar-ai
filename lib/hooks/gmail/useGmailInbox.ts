@@ -10,6 +10,33 @@ export function useGmailInbox() {
   const [selectedMessage, setSelectedMessage] = useState<GmailMessage | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  useEffect(() => {
+    if (!selectedMessage || !selectedMessage.id) return;
+
+    const isFullyLoaded = !!(selectedMessage.payload?.body?.data || selectedMessage.payload?.parts);
+    if (isFullyLoaded) return;
+
+    let active = true;
+
+    async function loadDetails() {
+      try {
+        const res = await fetch(`/api/gmail/details?id=${selectedMessage!.id}`);
+        if (res.ok && active) {
+          const fullMsg = await res.json();
+          setSelectedMessage(prev => prev?.id === selectedMessage!.id ? { ...fullMsg, draftId: prev?.draftId } : prev);
+        }
+      } catch (err) {
+        console.error("Failed to fetch full message details:", err);
+      }
+    }
+
+    loadDetails();
+
+    return () => {
+      active = false;
+    };
+  }, [selectedMessage?.id]);
+
   const fetchEmails = useCallback(async (query = "", label = selectedFolder, category = selectedCategory) => {
     if (["CALENDAR", "AGENTS", "SETTINGS"].includes(label)) {
       setLoading(false);

@@ -17,7 +17,8 @@ export function AICommandCenter() {
   const [limitInfo, setLimitInfo] = useState<LimitInfo | null>(null);
   
   const chatEndRef = useRef<HTMLDivElement>(null);
-
+  const sendingRef = useRef(false);
+  
   // Fetch usage limits
   const fetchLimits = async () => {
     try {
@@ -42,8 +43,9 @@ export function AICommandCenter() {
   const handleSendCommand = async (e: React.SubmitEvent) => {
     e.preventDefault();
     const cleanCommand = command.trim();
-    if (!cleanCommand || loading) return;
+    if (!cleanCommand || loading || sendingRef.current) return;
 
+    sendingRef.current = true;
     setCommand('');
     
     // Add user message
@@ -91,6 +93,7 @@ export function AICommandCenter() {
       }]);
     } finally {
       setLoading(false);
+      sendingRef.current = false;
     }
   };
 
