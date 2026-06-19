@@ -19,7 +19,30 @@ export async function GET(request: NextRequest) {
     const timeMin = searchParams.get("timeMin") || undefined;
     const timeMax = searchParams.get("timeMax") || undefined;
     const query = searchParams.get("q") || undefined;
-    const useDb = searchParams.get("db") === "true";
+    const explicitDb = searchParams.get("db");
+
+    // Read the last active status cookie
+    const cookieVal = request.cookies.get("last_active_status")?.value;
+    let useDb = false;
+    let shouldUpdateCookie = false;
+
+    if (cookieVal) {
+      const lastActiveTime = parseInt(cookieVal, 10);
+      if (!isNaN(lastActiveTime) && Date.now() - lastActiveTime < 5 * 60 * 1000) {
+        useDb = true;
+      } else {
+        useDb = false;
+        shouldUpdateCookie = true;
+      }
+    } else {
+      useDb = false;
+      shouldUpdateCookie = true;
+    }
+
+    // Allow explicit override if query params specify db
+    if (explicitDb !== null) {
+      useDb = explicitDb === "true";
+    }
 
     let events;
     if (useDb) {
@@ -28,7 +51,18 @@ export async function GET(request: NextRequest) {
       events = await getAllEvents(tenantId, timeMin, timeMax);
     }
 
-    return NextResponse.json({ events, connected: true });
+    const response = NextResponse.json({ events, connected: true });
+    
+    if (shouldUpdateCookie || !cookieVal) {
+      response.cookies.set("last_active_status", Date.now().toString(), {
+        path: "/",
+        maxAge: 60 * 60 * 24 * 365, // 1 year
+        httpOnly: true,
+        sameSite: "lax",
+      });
+    }
+
+    return response;
   } catch (error: any) {
     const isAuthMissing =
       error?.name === "AuthMissingError" ||

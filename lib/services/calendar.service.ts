@@ -27,15 +27,25 @@ export const getAllEvents = async (tenantId: string, timeMin?: string, timeMax?:
   const minTime = timeMin || new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
   const maxTime = timeMax || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
 
-  const response = await corsair.withTenant(tenantId).googlecalendar.api.events.getMany({
-    calendarId: "primary",
-    orderBy: "startTime",
-    singleEvents: true,
-    timeMin: minTime,
-    timeMax: maxTime,
-  });
+  try {
+    const response = await corsair.withTenant(tenantId).googlecalendar.api.events.getMany({
+      calendarId: "primary",
+      timeMin: minTime,
+      timeMax: maxTime,
+      singleEvents: true,
+      orderBy: "startTime",
+    });
+    
 
-  return response.items || [];
+    return response.items || [];
+  } catch (err: any) {
+    if (err?.name === "ZodError" || err?.issues) {
+    console.warn("[calendar] Zod validation error from corsair, returning []");
+    return [];
+  }
+  console.warn("[calendar] getMany failed, returning []:", err?.message);
+  return [];
+  }
 };
 
 /**

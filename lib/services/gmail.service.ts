@@ -179,3 +179,72 @@ export const getAllSentMails = async (params: GmailServiceTypes) => {
   );
   return mails.messages || [];
 }
+
+/**
+ * Reads emails from the local database synced by Corsair.
+ */
+export const searchMailsFromDb = async (tenantId: string, q?: string) => {
+  const dbMessages = await corsair.withTenant(tenantId).gmail.db.messages.search({
+    data: {},
+  });
+
+  let messages = dbMessages.map((msg) => ({
+    ...msg.data,
+    id: msg.entity_id,
+  }));
+
+  if (q) {
+    const lowerQ = q.toLowerCase();
+
+    const hasInboxFilter = lowerQ.includes("label:inbox") || lowerQ.includes("in:inbox");
+    const hasSentFilter = lowerQ.includes("label:sent") || lowerQ.includes("in:sent");
+    const hasStarredFilter = lowerQ.includes("is:starred") || lowerQ.includes("label:starred");
+    const hasTrashFilter = lowerQ.includes("label:trash") || lowerQ.includes("in:trash");
+    const hasSpamFilter = lowerQ.includes("label:spam") || lowerQ.includes("in:spam");
+    const hasCategoryPrimary = lowerQ.includes("category:primary");
+
+    messages = messages.filter((msg: any) => {
+      const labels = msg.labelIds || [];
+      const lowerLabels = labels.map((l: string) => l.toLowerCase());
+
+      if (hasInboxFilter && !lowerLabels.includes("inbox")) return false;
+      if (hasSentFilter && !lowerLabels.includes("sent")) return false;
+      if (hasStarredFilter && !lowerLabels.includes("starred")) return false;
+      if (hasTrashFilter && !lowerLabels.includes("trash")) return false;
+      if (hasSpamFilter && !lowerLabels.includes("spam")) return false;
+      if (hasCategoryPrimary) {
+        const otherCategories = ["category_updates", "category_promotions", "category_social", "category_forums"];
+        if (otherCategories.some(cat => lowerLabels.includes(cat))) {
+          return false;
+        }
+      }
+
+      const searchKeywords = q
+        .split(/\s+/)
+        .filter(word => !word.includes("label:") && !word.includes("category:") && !word.includes("in:") && !word.includes("is:"))
+        .join(" ")
+        .trim();
+
+      if (searchKeywords) {
+        const lowerKeywords = searchKeywords.toLowerCase();
+        const subjectMatch = (msg.subject || "").toLowerCase().includes(lowerKeywords);
+        const snippetMatch = (msg.snippet || "").toLowerCase().includes(lowerKeywords);
+        const bodyMatch = (msg.body || "").toLowerCase().includes(lowerKeywords);
+        const fromMatch = (msg.from || "").toLowerCase().includes(lowerKeywords);
+        const toMatch = (msg.to || "").toLowerCase().includes(lowerKeywords);
+
+        return subjectMatch || snippetMatch || bodyMatch || fromMatch || toMatch;
+      }
+
+      return true;
+    });
+  }
+
+  messages.sort((a: any, b: any) => {
+    const timeA = a.internalDate ? new Date(a.internalDate).getTime() : 0;
+    const timeB = b.internalDate ? new Date(b.internalDate).getTime() : 0;
+    return timeB - timeA;
+  });
+
+  return messages;
+};

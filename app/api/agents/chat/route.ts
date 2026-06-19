@@ -1,9 +1,8 @@
 import { NextResponse, NextRequest } from "next/server";
 import { getServerSession } from "next-auth";
 import { authProvider } from "@/lib/auth/config";
-import { streamText, tool, stepCountIs } from "ai";
+import { streamText, stepCountIs } from "ai";
 import { createOpenAI } from "@ai-sdk/openai";
-import { z } from "zod";
 import ENV from "@/lib/config/ENV";
 import {
   syncEmailsForUser,
@@ -11,8 +10,8 @@ import {
   searchEmailsVector,
   searchEventsVector
 } from "@/lib/services/agent-chat.service";
-import { getAllMails, getMessageDetails, createDraft, sendDraft } from "@/lib/services/gmail.service";
-import { getAllEvents, createEvent, deleteEvent } from "@/lib/services/calendar.service";
+import { getAiTools } from "@/lib/services/ai-tools";
+
 
 const openrouter = createOpenAI({
   baseURL: "https://openrouter.ai/api/v1",
@@ -97,181 +96,17 @@ CRITICAL: You MUST use your tools to perform requested actions immediately. Spea
 
     // 4. Define Specialist Tools dynamically
     const tools: Record<string, any> = {};
+    const allTools = getAiTools({ tenantId });
 
     if (specialistId === "mail" || specialistId === "strategy") {
-      tools.listEmails = tool({
-        description: "Search or list Gmail messages matching a query.",
-        parameters: z.object({
-          q: z.string().optional().describe("Gmail search query (e.g. 'from:Netflix')"),
-          maxResults: z.number().optional().default(10),
-        }),
-        execute: async ({ q, maxResults }: { q?: string; maxResults?: number }) => {
-          try {
-            const messages = await getAllMails({
-              userId: "me",
-              tenentId: tenantId,
-              q,
-              maxResults,
-              includeSpamTrash: true,
-              labelIds: ["INBOX"],
-            });
-            const enriched = await Promise.all(
-              messages.slice(0, 5).map(async (msg: any) => {
-                if (!msg.id) return null;
-                try {
-                  const details = await getMessageDetails(tenantId, msg.id);
-                  return {
-                    id: details.id,
-                    subject: details.payload?.headers?.find((h: any) => h.name === "Subject")?.value || "No Subject",
-                    sender: details.payload?.headers?.find((h: any) => h.name === "From")?.value || "Unknown",
-                    snippet: details.snippet,
-                  };
-                } catch {
-                  return null;
-                }
-              })
-            );
-            return { emails: enriched.filter(Boolean) };
-          } catch (e: any) {
-            return { error: e.message };
-          }
-        },
-      } as any);
-
-      tools.sendEmail = tool({
-        description: "Compose and send a new email to a recipient.",
-        parameters: z.object({
-          to: z.string().describe("Recipient email address"),
-          subject: z.string().describe("Email subject line"),
-          body: z.string().describe("Email body content (HTML or plain text)"),
-        }),
-        execute: async ({ to, subject, body }: { to: string; subject: string; body: string }) => {
-          console.log("[AGENT TOOL] sendEmail invoked:", { to, subject, body });
-          try {
-            const mimeMessage = [
-              `To: ${to}`,
-              `Subject: =?utf-8?B?${Buffer.from(subject).toString("base64")}?=`,
-              'Content-Type: text/html; charset="UTF-8"',
-              'MIME-Version: 1.0',
-              '',
-              body
-            ].join('\r\n');
-            const rawMime = Buffer.from(mimeMessage)
-              .toString("base64")
-              .replace(/\+/g, "-")
-              .replace(/\//g, "_")
-              .replace(/=+$/, "");
-
-            const draft = await createDraft(tenantId, rawMime);
-            if (!draft.id) {
-              throw new Error("Failed to create draft");
-            }
-            await sendDraft(tenantId, draft.id);
-            return { success: true, message: `Email sent to ${to}.` };
-          } catch (e: any) {
-            return { error: e.message };
-          }
-        },
-      } as any);
+      tools.listEmails = allTools.listEmails;
+      tools.sendEmail = allTools.sendEmail;
     }
 
     if (specialistId === "calendar" || specialistId === "strategy") {
-      tools.listCalendarEvents = tool({
-        description: "List calendar events for the user.",
-        parameters: z.object({
-          timeMin: z.string().optional().describe("ISO start time"),
-          timeMax: z.string().optional().describe("ISO end time"),
-        }),
-        execute: async ({ timeMin, timeMax }: { timeMin?: string; timeMax?: string }) => {
-          try {
-            const events = await getAllEvents(tenantId, timeMin, timeMax);
-            return {
-              events: events.map((e: any) => ({
-                id: e.id,
-                summary: e.summary,
-                description: e.description,
-                start: e.start,
-                end: e.end,
-              })),
-            };
-          } catch (e: any) {
-            return { error: e.message };
-          }
-        },
-      } as any);
-
-      tools.createCalendarEvent = tool({
-        description: "Create a new event in the Google calendar.",
-        parameters: z.object({
-          summary: z.string().optional().describe("Title of the event. Defaults to 'Meeting' if not specified."),
-          description: z.string().optional().describe("Optional description"),
-          startDateTime: z.string().optional().describe(
-            "The start date-time for the event in ISO 8601 format (e.g., '2026-06-17T18:00:00+05:30'). " +
-            "You MUST compute the exact date and time based on the current local time context provided in the system prompt. " +
-            "For example, if the current time is Wed Jun 17 2026 18:20:14 GMT+0530, and the user asks for '6 pm today', " +
-            "calculate the date '2026-06-17' and time '18:00:00', and format it with the offset: '2026-06-17T18:00:00+05:30'."
-          ),
-          endDateTime: z.string().optional().describe(
-            "The end date-time for the event in ISO 8601 format (e.g., '2026-06-17T19:00:00+05:30'). " +
-            "Must be after startDateTime. If no duration is specified, assume a 1-hour duration."
-          ),
-        }),
-        execute: async ({ summary, description, startDateTime, endDateTime }: { summary?: string; description?: string; startDateTime?: string; endDateTime?: string }) => {
-          console.log("[AGENT TOOL] createCalendarEvent invoked:", { summary, description, startDateTime, endDateTime });
-          try {
-            const formatISO = (dt?: string) => {
-              if (!dt) return new Date().toISOString();
-              try {
-                const parsed = new Date(dt);
-                return isNaN(parsed.getTime()) ? dt : parsed.toISOString();
-              } catch {
-                return dt;
-              }
-            };
-            const formatISOEnd = (dt?: string, startDt?: string) => {
-              if (!dt) {
-                const baseDate = startDt ? new Date(startDt) : new Date();
-                const end = new Date(baseDate.getTime() + 60 * 60 * 1000);
-                return end.toISOString();
-              }
-              try {
-                const parsed = new Date(dt);
-                return isNaN(parsed.getTime()) ? dt : parsed.toISOString();
-              } catch {
-                return dt;
-              }
-            };
-
-            const computedStart = formatISO(startDateTime);
-            const computedEnd = formatISOEnd(endDateTime, computedStart);
-
-            const created = await createEvent(tenantId, {
-              summary: summary || "Meeting",
-              ...(description ? { description } : {}),
-              start: { dateTime: computedStart },
-              end: { dateTime: computedEnd },
-            });
-            return { success: true, event: created };
-          } catch (e: any) {
-            return { error: e.message };
-          }
-        },
-      } as any);
-
-      tools.deleteCalendarEvent = tool({
-        description: "Delete an event from the calendar.",
-        parameters: z.object({
-          eventId: z.string().describe("The ID of the event to delete"),
-        }),
-        execute: async ({ eventId }: { eventId: string }) => {
-          try {
-            await deleteEvent(tenantId, eventId);
-            return { success: true, message: "Calendar event deleted." };
-          } catch (e: any) {
-            return { error: e.message };
-          }
-        },
-      } as any);
+      tools.listCalendarEvents = allTools.listCalendarEvents;
+      tools.createCalendarEvent = allTools.createCalendarEvent;
+      tools.deleteCalendarEvent = allTools.deleteCalendarEvent;
     }
 
     // 5. Determine Dynamic Proposed Next Step
@@ -302,7 +137,7 @@ CRITICAL: You MUST use your tools to perform requested actions immediately. Spea
 
     // 6. Stream text responses utilizing NDJSON streaming
     const result = streamText({
-      model: openrouter.chat("google/gemini-2.5-pro"),
+      model: openrouter.chat("cohere/north-mini-code:free"),
       maxOutputTokens: 1000,
       system: systemPrompt,
       messages: [
