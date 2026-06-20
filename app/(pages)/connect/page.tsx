@@ -41,8 +41,12 @@ export default async function ConnectPage() {
   const isCalendarConnected = accounts.some((a) => a.integrationId === calendarInt?.id);
 
   return (
-    <div className="relative min-h-screen bg-background text-on-background flex flex-col font-sans">
+    <div className="relative min-h-screen bg-background text-on-background flex flex-col font-sans overflow-x-hidden">
       <div className="absolute inset-0 bg-grid-pattern pointer-events-none opacity-40"></div>
+
+      {/* Floating Animated Radial Glows */}
+      <div className="absolute top-[20%] left-[20%] -translate-x-1/2 -translate-y-1/2 w-[350px] h-[350px] bg-primary/10 rounded-full blur-[110px] pointer-events-none animate-pulse-glow"></div>
+      <div className="absolute bottom-[20%] right-[20%] -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] bg-primary/5 rounded-full blur-[100px] pointer-events-none animate-pulse-glow" style={{ animationDelay: "-6s" }}></div>
 
       {/* Header */}
       <ConnectHeader user={session.user} isGmailConnected={isGmailConnected} />
@@ -50,21 +54,57 @@ export default async function ConnectPage() {
       {/* Main Content */}
       <main className="relative z-10 flex-1 max-w-5xl mx-auto px-gutter py-12 flex flex-col gap-10 w-full">
         {isGmailConnected && isCalendarConnected ? (
-          <div className="flex-1 flex flex-col items-center justify-center text-center py-12 max-w-md mx-auto">
-            <div className="w-20 h-20 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center mb-8 shadow-[0_0_35px_rgba(242,202,80,0.1)]">
-              <span className="material-symbols-outlined text-primary text-4xl font-bold">check_circle</span>
+          <div className="flex-1 flex flex-col items-center justify-center text-center py-8 max-w-lg mx-auto">
+            {/* Sync Diagram */}
+            <div className="relative flex items-center justify-between w-full max-w-md h-32 mb-10 select-none">
+              {/* Radial glow behind the central orb */}
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 bg-primary/10 rounded-full blur-2xl pointer-events-none animate-pulse"></div>
+
+              {/* Dotted lines with animation */}
+              <div className="absolute top-1/2 left-4 right-4 h-[1px] border-t border-dashed border-primary/30 -translate-y-1/2 z-0"></div>
+
+              {/* Left Node (Gmail) */}
+              <div className="relative z-10 flex flex-col items-center gap-2">
+                <div className="w-14 h-14 rounded-full bg-surface-card border border-primary/30 flex items-center justify-center shadow-[0_0_15px_rgba(242,202,80,0.1)] transition-transform duration-300 hover:scale-105">
+                  <span className="material-symbols-outlined text-primary text-xl">mail</span>
+                </div>
+                <span className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">Gmail</span>
+              </div>
+
+              {/* Center Node (Klar AI Hub) */}
+              <div className="relative z-10 flex flex-col items-center gap-2 -mt-4">
+                <div className="w-20 h-20 rounded-full bg-primary/15 border-2 border-primary flex items-center justify-center shadow-[0_0_30px_rgba(242,202,80,0.25)] relative">
+                  {/* Outer spinning ring border */}
+                  <div className="absolute inset-0 rounded-full border border-dashed border-primary/60 animate-orbit-cw p-1"></div>
+                  
+                  {/* Central glowing core */}
+                  <div className="w-14 h-14 rounded-full bg-primary flex items-center justify-center text-background font-black text-lg shadow-[0_0_15px_rgba(242,202,80,0.4)]">
+                    K
+                  </div>
+                </div>
+                <span className="text-[10px] font-bold text-white uppercase tracking-widest">Klar OS</span>
+              </div>
+
+              {/* Right Node (Google Calendar) */}
+              <div className="relative z-10 flex flex-col items-center gap-2">
+                <div className="w-14 h-14 rounded-full bg-surface-card border border-primary/30 flex items-center justify-center shadow-[0_0_15px_rgba(242,202,80,0.1)] transition-transform duration-300 hover:scale-105">
+                  <span className="material-symbols-outlined text-primary text-xl">calendar_today</span>
+                </div>
+                <span className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">Calendar</span>
+              </div>
             </div>
+
             <h1 className="text-2xl font-bold tracking-tight text-white mb-3">
               Klar OS Workspace is Ready
             </h1>
-            <p className="text-xs text-on-surface-variant leading-relaxed mb-8 max-w-xs opacity-80">
+            <p className="text-xs text-on-surface-variant leading-relaxed mb-8 max-w-xs opacity-90 font-normal">
               Your Gmail and Google Calendar are successfully synchronized. Klar OS is ready to orchestrate your communications, summarize schedules, and automate actions.
             </p>
             <Link
               href="/index"
-              className="w-full py-3.5 bg-primary hover:bg-primary-hover active:scale-[0.98] transition-all text-surface-sidebar rounded-lg text-xs font-bold flex items-center justify-center gap-2 shadow-[0_4px_16px_rgba(242,202,80,0.25)] hover:shadow-[0_6px_20px_rgba(242,202,80,0.35)] cursor-pointer"
+              className="w-full py-3.5 bg-primary hover:bg-primary-hover active:scale-[0.98] transition-all text-surface-sidebar rounded-lg text-xs font-bold flex items-center justify-center gap-2 shadow-[0_4px_16px_rgba(242,202,80,0.2)] hover:shadow-[0_6px_20px_rgba(242,202,80,0.35)] cursor-pointer"
             >
-              <span className="material-symbols-outlined text-xs font-bold">rocket_launch</span>
+              <span className="material-symbols-outlined text-sm font-bold">rocket_launch</span>
               Enter Klar OS Workspace
             </Link>
           </div>
@@ -81,7 +121,7 @@ export default async function ConnectPage() {
             </div>
 
             {/* Integration Cards Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
               {/* Gmail Card */}
               <IntegrationCard
                 title="Google Gmail"
